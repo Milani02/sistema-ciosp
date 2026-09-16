@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import type { Profile } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 
-type Status = "loading" | "anon" | "authed" | "profile-error";
+type Status = "loading" | "anon" | "authed" | "profile-error" | "reconnecting";
 
 interface AuthApi {
   status: Status;
@@ -19,9 +19,13 @@ export function useAuth() {
   return ctx;
 }
 
-async function loadProfile(userId: string): Promise<Profile | null> {
-  const { data } = await supabase.from("profiles").select("id,name,department,level").eq("id", userId).maybeSingle();
-  return data as Profile | null;
+async function loadProfile(userId: string): Promise<{ profile: Profile | null; failed: boolean }> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id,name,department,level")
+    .eq("id", userId)
+    .maybeSingle();
+  return { profile: data as Profile | null, failed: !!error };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -39,14 +43,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return;
       }
-      const p = await loadProfile(userId);
-      if (cancelled) return;
-      if (p) {
-        setProfile(p);
-        setStatus("authed");
-      } else {
-        setProfile(null);
-        setStatus("profile-error");
+      // Tenta de novo indefinidamente em caso de falha de rede/consulta —
+      // um evento ao vivo não pode travar o login de alguém numa tela de
+      // erro permanente só porque o wifi engasgou por um segundo. Só cai
+      // em "profile-error" quando a consulta REALMENTE funcionou e não
+      // achou linha nenhuma (aí sim é config faltando, não instabilidade).
+      let attempt = 0;
+      while (!cancelled) {
+        const { profile: p, failed } = await loadProfile(userId);
+        if (cancelled) return;
+        if (failed) {
+          attempt++;
+          setStatus("reconnecting");
+          await new Promise((r) => setTimeout(r, Math.min(1500 * attempt, 8000)));
+          continue;
+        }
+        if (p) {
+          setProfile(p);
+          setStatus("authed");
+        } else {
+          setProfile(null);
+          setStatus("profile-error");
+        }
+        return;
       }
     }
 

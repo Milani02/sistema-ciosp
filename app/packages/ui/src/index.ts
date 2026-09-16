@@ -17,4 +17,5 @@ export * from "./components/Skeleton";
 export * from "./components/Toast";
 export * from "./components/InfoBanner";
 export * from "./components/ThemeToggle";
+export * from "./components/ErrorBoundary";
 export * from "./icons";

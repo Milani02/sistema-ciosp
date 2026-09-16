@@ -4,6 +4,7 @@ import {
   AppHeader,
   BottomNav,
   ConnectionPill,
+  ErrorBoundary,
   LivingLinesBackground,
   ThemeToggle,
   Toaster,
@@ -109,6 +110,9 @@ function Shell() {
         />
 
         <div className="pt-4">
+        {/* key={pathname} — se uma tela quebrar, trocar de aba remonta a
+            boundary do zero (limpa o erro) em vez de exigir F5. */}
+        <ErrorBoundary key={location.pathname}>
         <Suspense fallback={<div className="py-10 text-center text-sm text-white/60">Carregando...</div>}>
           <Routes>
             <Route path="/" element={<Navigate to={defaultPathFor(profile)} replace />} />
@@ -219,6 +223,7 @@ function Shell() {
             <Route path="*" element={<Navigate to={defaultPathFor(profile)} replace />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
 
         <p className="mt-8 border-t border-white/15 pt-4 text-[0.72rem] text-white/45">
           Sistema em operação — os dados registrados aqui já valem como registro real do dia. 27–30/01/2027 · 44º
@@ -240,6 +245,14 @@ function Gate() {
 
   if (status === "loading") {
     return <div className="flex min-h-screen items-center justify-center text-sm text-ink-soft">Carregando...</div>;
+  }
+  if (status === "reconnecting") {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-2 bg-linen px-6 text-center">
+        <div className="live-dot" />
+        <p className="text-sm text-ink-soft">Conexão instável — tentando de novo...</p>
+      </div>
+    );
   }
   if (status === "anon") {
     return <LoginPage />;

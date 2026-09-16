@@ -293,6 +293,7 @@ export function CaixaEstoquePage() {
     patchProduct,
   } = useLiveData();
   const [pendingDeliver, setPendingDeliver] = useState<Order | null>(null);
+  const [delivering, setDelivering] = useState(false);
 
   const openSession = useMemo(() => cashSessions.find((s) => s.status === "aberto") ?? null, [cashSessions]);
 
@@ -495,6 +496,8 @@ export function CaixaEstoquePage() {
   }
 
   async function marcarEntregue(order: Order) {
+    if (delivering) return;
+    setDelivering(true);
     const patch = {
       status: "entregue" as const,
       delivered_by: profile?.id ?? null,
@@ -529,6 +532,7 @@ export function CaixaEstoquePage() {
       for (const [productId, stock] of stockBefore) patchProduct(productId, { stock });
       showToast("Erro: " + error.message);
     }
+    setDelivering(false);
   }
 
   async function cancelarPedido(order: Order) {
@@ -740,8 +744,9 @@ export function CaixaEstoquePage() {
               </Button>
               <Button
                 className="flex-1"
-                onClick={() => {
-                  marcarEntregue(pendingDeliver);
+                loading={delivering}
+                onClick={async () => {
+                  await marcarEntregue(pendingDeliver);
                   setPendingDeliver(null);
                 }}
               >
