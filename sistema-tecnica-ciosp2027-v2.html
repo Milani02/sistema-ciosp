@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sistema — Consultoria Técnica CIOSP 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #f7f5ec; --surface: #ffffff; --ink: #23301a; --ink-soft: #5b6350;
+    --moss: #4c5a28; --moss-deep: #33401a; --moss-on: #ffffff;
+    --sage: #7d8a5c; --sage-tint: #e4e6d4;
+    --clay: #b3611f; --clay-tint: #f3e3cf;
+    --brick: #a33d33; --brick-tint: #f4e1de;
+    --good: #3d7a3f;
+    --line: #e2decb;
+    --shadow: 0 1px 2px rgba(35,48,26,0.07), 0 10px 26px -14px rgba(35,48,26,0.24);
+    --shadow-lift: 0 4px 10px rgba(35,48,26,0.10), 0 20px 40px -18px rgba(35,48,26,0.3);
+    --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-full: 999px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --linen: #11150c; --surface: #1a2012; --ink: #edf1e4; --ink-soft: #aab29a;
+      --moss: #9fb56c; --moss-deep: #d9e4c6; --moss-on: #16200a;
+      --sage: #b7bd94; --sage-tint: #29331e;
+      --clay: #e2a15c; --clay-tint: #2c2314;
+      --brick: #e28c82; --brick-tint: #32201c;
+      --good: #7fbf82;
+      --line: #2a331d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+      --shadow-lift: 0 4px 10px rgba(0,0,0,0.35), 0 20px 40px -18px rgba(0,0,0,0.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--linen); color: var(--ink); font-family: "Montserrat", "Segoe UI", Arial, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .sans { font-family: inherit; }
+  button, input, select { font: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 1.1rem 1.1rem calc(6.6rem + env(safe-area-inset-bottom)); }
+  @media (min-width: 760px) { .wrap { padding-left: 1.6rem; padding-right: 1.6rem; } }
+
+  header.top {
+    position: sticky; top: 0; z-index: 40; margin: -1.1rem -1.1rem 1rem; padding: 0.9rem 1.1rem 0.8rem;
+    display: flex; justify-content: space-between; align-items: center; gap: 0.8rem;
+    background: color-mix(in srgb, var(--linen) 88%, transparent); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  @media (min-width: 760px) { header.top { margin-left: -1.6rem; margin-right: -1.6rem; padding-left: 1.6rem; padding-right: 1.6rem; } }
+  .brand { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+  .brand-mark { flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px; background: var(--moss); color: var(--moss-on); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.82rem; letter-spacing: -0.02em; }
+  .eyebrow { display: block; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.6rem; color: var(--sage); font-weight: 700; }
+  h1 { font-size: 1.02rem; margin: 0.1rem 0 0; color: var(--moss-deep); font-weight: 800; letter-spacing: -0.01em; }
+  .dek { display: none; }
+
+  .status-pill { font-size: 0.7rem; font-weight: 700; padding: 0.32rem 0.7rem; border-radius: var(--r-full); display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+  .status-pill.ok { background: var(--sage-tint); color: var(--moss-deep); }
+  .status-pill.bad { background: var(--brick-tint); color: var(--brick); }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .readme { display: flex; gap: 0.6rem; align-items: flex-start; background: var(--sage-tint); border-radius: var(--r-md); padding: 0.75rem 0.85rem; font-size: 0.78rem; line-height: 1.5; color: var(--moss-deep); margin-bottom: 1.1rem; }
+  .readme svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 0.15rem; color: var(--moss); }
+  .readme b { font-weight: 700; }
+
+  .tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; justify-content: center; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
+  .tabbar-inner { width: 100%; max-width: 820px; display: flex; }
+  .tab-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; background: none; border: none; padding: 0.5rem 0.15rem 0.45rem; cursor: pointer; color: var(--ink-soft); min-height: 54px; }
+  .tab-btn svg { width: 19px; height: 19px; }
+  .tab-btn span { font-size: 0.6rem; font-weight: 700; text-align: center; line-height: 1.15; }
+  .tab-btn.active { color: var(--moss); }
+
+  .panel { display: none; margin-top: 0.2rem; }
+  .panel.active { display: block; animation: fade-in .18s ease; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .panel h2 { font-size: 1.1rem; font-weight: 800; color: var(--moss-deep); margin: 0 0 0.2rem; }
+  .panel .sub { font-size: 0.82rem; color: var(--ink-soft); margin: 0 0 1rem; max-width: 64ch; }
+
+  .card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 1.05rem 1.1rem; background: var(--surface); box-shadow: var(--shadow); }
+  .cards2 { display: grid; grid-template-columns: 1fr; gap: 0.8rem; }
+  @media (min-width: 760px) { .cards2 { grid-template-columns: 1fr 1fr; gap: 1rem; } }
+
+  .card-title { font-weight: 700; font-size: 0.9rem; color: var(--moss-deep); margin-bottom: 0.15rem; }
+  .field-lbl { font-size: 0.7rem; color: var(--ink-soft); margin: 0.65rem 0 0.25rem; font-weight: 600; }
+  .txt-input, .sel-input { width: 100%; border: 1px solid var(--line); border-radius: var(--r-md); padding: 0.55rem 0.7rem; font-size: 0.86rem; background: var(--linen); color: var(--ink); }
+  .txt-input:focus, .sel-input:focus { outline: 2px solid var(--moss); outline-offset: 1px; }
+  .num-input { width: 90px; }
+
+  .primary-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.45rem; background: var(--moss); color: var(--moss-on); border: none; border-radius: var(--r-md); padding: 0.65rem 1.05rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
+  .primary-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ghost-btn { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); border-radius: var(--r-sm); padding: 0.45rem 0.75rem; font-weight: 700; font-size: 0.76rem; cursor: pointer; }
+  .btn-row { display: flex; gap: 0.5rem; margin-top: 0.7rem; align-items: center; flex-wrap: wrap; }
+  .badge-row { display: flex; gap: 0.4rem; }
+  .badge-row .txt-input { flex: 1; }
+  .cam-btn { display: flex; align-items: center; justify-content: center; background: var(--sage-tint); color: var(--moss-deep); border: none; border-radius: var(--r-md); padding: 0 0.7rem; cursor: pointer; flex-shrink: 0; }
+  .cam-btn svg { width: 17px; height: 17px; }
+  .badge-recognized { font-size: 0.8rem; font-weight: 600; margin-top: 0.6rem; padding: 0.6rem 0.75rem; border-radius: var(--r-md); }
+  .badge-recognized.ok { color: var(--moss-deep); background: var(--sage-tint); }
+  .badge-recognized.bad { color: var(--brick); background: var(--brick-tint); }
+  .badge-recognized.warn { color: var(--clay); background: var(--clay-tint); }
+
+  .cam-modal { position: fixed; inset: 0; background: rgba(20,26,12,0.85); z-index: 100; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; padding: 1rem; }
+  .cam-modal.open { display: flex; }
+  .cam-modal video { width: min(92vw, 480px); border-radius: var(--r-lg); background: #000; }
+  .cam-modal .hint { color: #fff; font-size: 0.86rem; text-align: center; max-width: 320px; }
+  .cam-modal button { background: var(--surface); border: none; border-radius: var(--r-md); padding: 0.6rem 1.2rem; font-weight: 700; font-size: 0.84rem; cursor: pointer; }
+
+  .list { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 0.9rem; max-height: 260px; overflow-y: auto; list-style: none; padding: 0; }
+  .list-row { display: flex; justify-content: space-between; align-items: center; gap: 0.7rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); font-size: 0.83rem; }
+  .list-row .meta { color: var(--ink-soft); font-size: 0.76rem; }
+  .list-empty { color: var(--ink-soft); font-size: 0.84rem; padding: 0.7rem 0; }
+  .small-btn { display: inline-flex; align-items: center; gap: 0.3rem; background: var(--moss); color: var(--moss-on); border: none; border-radius: var(--r-sm); padding: 0.4rem 0.7rem; font-size: 0.76rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .small-btn svg { width: 13px; height: 13px; }
+  .small-btn.danger { background: var(--brick); }
+  .fill-tag { font-size: 0.7rem; font-weight: 700; padding: 0.18rem 0.55rem; border-radius: var(--r-full); white-space: nowrap; }
+  .fill-tag.ok { background: var(--sage-tint); color: var(--moss-deep); }
+  .fill-tag.full { background: var(--brick-tint); color: var(--brick); }
+
+  .two-col { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
+  @media (min-width: 760px) { .two-col { grid-template-columns: 1.1fr 1fr; } }
+
+  .lunch-slot { border: 1px dashed var(--line); border-radius: var(--r-md); padding: 0.8rem 0.95rem; }
+  .lunch-slot.filled { border-style: solid; background: var(--sage-tint); }
+  .lunch-slot.over { background: var(--brick-tint); border-color: var(--brick); }
+  .lunch-slot .names { font-weight: 700; color: var(--ink); font-size: 0.88rem; }
+  .lunch-slot .timer { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.25rem; }
+  .lunch-slot.over .timer { color: var(--brick); font-weight: 700; }
+
+  .staff-row { display: flex; justify-content: space-between; align-items: center; gap: 0.7rem; padding: 0.5rem 0; border-bottom: 1px solid var(--line); font-size: 0.84rem; }
+  .staff-row .team-tag { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--ink-soft); background: var(--linen); border: 1px solid var(--line); padding: 0.1rem 0.4rem; border-radius: var(--r-full); margin-left: 0.4rem; }
+  .status-tag { font-weight: 700; font-size: 0.76rem; }
+  .status-tag.queued, .status-tag.eating { color: var(--clay); }
+  .status-tag.done { color: var(--good); }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+  @media (min-width: 700px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-tile { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 0.85rem 1rem; background: var(--surface); }
+  .stat-tile .num { font-size: 1.4rem; font-weight: 800; color: var(--moss-deep); }
+  .stat-tile .lbl { font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.2rem; display: flex; align-items: center; }
+  .live-dot { position: relative; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--moss); margin-right: 0.4rem; flex-shrink: 0; }
+  .live-dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid var(--moss); animation: live-ping 2s ease-out infinite; }
+  @keyframes live-ping { 0% { transform: scale(0.5); opacity: 0.9; } 100% { transform: scale(2.2); opacity: 0; } }
+
+  .alert-list { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; list-style: none; padding: 0; }
+  .alert-row { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; background: var(--brick-tint); border-left: 3px solid var(--brick); border-radius: var(--r-md); padding: 0.55rem 0.85rem; }
+  .alert-row .txt { font-size: 0.83rem; color: var(--ink); }
+  .alert-row .time { font-size: 0.68rem; color: var(--ink-soft); }
+  .alert-empty { color: var(--ink-soft); font-size: 0.84rem; padding: 0.4rem 0; }
+
+  .shift-day { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--clay); margin: 1rem 0 0.3rem; }
+  .shift-day:first-child { margin-top: 0.5rem; }
+  .shift-now { font-size: 0.6rem; font-weight: 700; background: var(--moss); color: var(--moss-on); padding: 0.1rem 0.4rem; border-radius: var(--r-full); margin-left: 0.4rem; }
+
+  .help-fab { position: fixed; right: 1.1rem; bottom: calc(5.2rem + env(safe-area-inset-bottom)); z-index: 55; display: flex; align-items: center; gap: 0.5rem; background: var(--moss); color: var(--moss-on); border: none; border-radius: var(--r-full); padding: 0.8rem 1.1rem; font-weight: 700; font-size: 0.84rem; box-shadow: var(--shadow-lift); cursor: pointer; }
+  .help-fab svg { width: 17px; height: 17px; }
+  .help-menu {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0 auto; max-width: 820px;
+    display: flex; flex-direction: column; gap: 0.4rem;
+    background: var(--surface); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-lift);
+    padding: 0.6rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
+    transform: translateY(100%); transition: transform .25s cubic-bezier(.32,.72,0,1);
+  }
+  .help-menu.open { transform: translateY(0); }
+  body:has(.help-menu.open)::after { content: ""; position: fixed; inset: 0; background: rgba(20,26,12,0.4); z-index: 58; pointer-events: none; }
+  .help-menu .lbl { font-size: 0.95rem; font-weight: 800; color: var(--moss-deep); padding: 0.3rem 0 0.4rem; }
+  .help-menu button { display: flex; align-items: center; gap: 0.7rem; background: var(--linen); border: 1px solid var(--line); text-align: left; padding: 0.7rem 0.8rem; border-radius: var(--r-md); font-size: 0.85rem; color: var(--ink); cursor: pointer; }
+  .help-menu button svg { width: 17px; height: 17px; color: var(--moss); flex-shrink: 0; }
+  .help-menu button:hover { border-color: var(--sage); }
+
+  .toast { position: fixed; top: calc(4.6rem + env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -8px); background: var(--moss-deep); color: #fff; padding: 0.65rem 1.05rem; border-radius: var(--r-full); font-size: 0.82rem; font-weight: 600; z-index: 70; opacity: 0; box-shadow: var(--shadow-lift); max-width: calc(100% - 2.2rem); text-align: center; transition: opacity .2s, transform .2s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  footer.foot { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: 0.72rem; color: var(--ink-soft); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .panel.active, .toast, .help-menu { animation: none !important; transition: none !important; }
+    .live-dot::after { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-mark">bio</span>
+      <div>
+        <span class="eyebrow">Sistema ao vivo · CIOSP 2027</span>
+        <h1>Consultoria Técnica</h1>
+      </div>
+    </div>
+    <span class="status-pill sans" id="connStatus"><span class="dot"></span>conectando...</span>
+  </header>
+
+  <div class="dek">Conectado ao banco de dados da Biodinâmica — qualquer tablet que abrir este link vê e registra os mesmos dados em tempo real.</div>
+
+  <div class="readme">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>
+    <div><b>Como usar:</b> cadastre as sessões do dia em "Agenda". O visitante se inscreve sozinho pelo celular dele e recebe um QR pessoal. Em "Check-in", escaneie esse QR 15 min antes da sessão pra confirmar a chegada e liberar a pulseira. Quem não chegar vira desistência automática e libera a vaga pro próximo da fila. "Saída" entrega o brinde, "Equipe" cuida da escala e do almoço. Tudo consolidado no "Painel do Administrador", ao vivo.</div>
+  </div>
+
+  <!-- CHECK-IN -->
+  <section class="panel active" id="panel-checkin">
+    <h2>Check-in do visitante</h2>
+    <p class="sub">O visitante já se inscreveu pelo celular dele. Escaneie o QR pessoal que ele mostra na tela (leitor USB/Bluetooth ou câmera) — o sistema confirma a chegada e mostra qual pulseira entregar.</p>
+    <div class="card">
+      <div class="card-title">Escanear QR do visitante</div>
+      <div class="badge-row">
+        <input class="txt-input" type="text" id="qrScanInput" placeholder="Aponte o leitor aqui e escaneie">
+        <button class="cam-btn" id="qrScanCam" type="button" title="Escanear com a câmera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h2.2l1.1-2h9.4l1.1 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>
+        </button>
+      </div>
+      <div class="btn-row">
+        <button class="primary-btn" id="qrScanBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.2 12.3l2.5 2.5 5-5.2"/></svg>
+          Confirmar check-in
+        </button>
+      </div>
+      <div class="badge-recognized" id="qrScanResult" style="display:none;"></div>
+    </div>
+
+    <div class="cards2" style="margin-top:1rem;">
+      <div class="card">
+        <div class="card-title">Aguardando chegada · Hands-on</div>
+        <ul class="list" id="waitingHandson" style="max-height:300px;"></ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Aguardando chegada · Palestra</div>
+        <ul class="list" id="waitingPalestra" style="max-height:300px;"></ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-title">Cadastrar visitante sem celular</div>
+      <div class="field-lbl sans">Sessão</div>
+      <select class="sel-input" id="manualSession"></select>
+      <div class="field-lbl sans">Nome do visitante</div>
+      <input class="txt-input" type="text" id="manualName" placeholder="Nome completo">
+      <div class="field-lbl sans">CRO / contato (opcional)</div>
+      <input class="txt-input" type="text" id="manualInfo" placeholder="CRO-SP 00000">
+      <div class="btn-row">
+        <button class="primary-btn" id="manualCheckinBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          Cadastrar e fazer check-in
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SAÍDA -->
+  <section class="panel" id="panel-saida">
+    <h2>Saída — resgate do brinde</h2>
+    <p class="sub">Lista de todo mundo que já fez check-in mas ainda não resgatou o brinde. Escaneie o mesmo QR do visitante pra filtrar direto, ou entregue direto da lista.</p>
+    <div class="card">
+      <div class="field-lbl sans">Escaneie o QR do visitante pra filtrar (opcional)</div>
+      <div class="badge-row">
+        <input class="txt-input" type="text" id="badgeSaida" placeholder="Aponte o leitor aqui e escaneie">
+        <button class="cam-btn" id="camSaida" type="button" title="Escanear com a câmera">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h2.2l1.1-2h9.4l1.1 2H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13.5" r="3.4"/></svg>
+        </button>
+        <button class="ghost-btn" id="clearSaida" type="button">Limpar</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:0.8rem;"><div id="redeemList"></div></div>
+  </section>
+
+  <!-- AGENDA -->
+  <section class="panel" id="panel-agenda">
+    <h2>Agenda de sessões</h2>
+    <p class="sub">Cadastre aqui as sessões de hands-on e palestra dos 4 dias de feira, com horário e número de vagas. A inscrição do visitante abre automaticamente 1h antes de cada sessão.</p>
+    <div class="cards2">
+      <div class="card">
+        <div class="card-title">Nova sessão</div>
+        <div class="field-lbl sans">Atividade</div>
+        <select class="sel-input" id="newSessionActivity">
+          <option value="handson">Hands-on</option>
+          <option value="palestra">Palestra</option>
+        </select>
+        <div class="field-lbl sans">Título</div>
+        <input class="txt-input" type="text" id="newSessionTitle" placeholder="Ex: Restauração Estética">
+        <div class="field-lbl sans">Data e horário</div>
+        <input class="txt-input" type="datetime-local" id="newSessionTime">
+        <div class="field-lbl sans">Vagas</div>
+        <input class="txt-input num-input" type="number" id="newSessionCapacity" value="8" min="1">
+        <div class="btn-row">
+          <button class="primary-btn" id="addSession" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Adicionar sessão
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sessões cadastradas</div>
+        <ul class="list" id="sessionsList" style="max-height:420px;"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- EQUIPE -->
+  <section class="panel" id="panel-equipe">
+    <h2>Equipe — escala de turnos e almoço</h2>
+    <p class="sub">Escala de quem está em cada área e horário, e o controle de almoço (copa para 2 pessoas, limite de 40 min por dupla).</p>
+
+    <div class="card-title" style="margin-top:0.3rem;">Escala de turnos</div>
+    <div class="cards2" style="margin-top:0.5rem;">
+      <div class="card">
+        <div class="card-title">Nova escala</div>
+        <div class="field-lbl sans">Funcionário</div>
+        <select class="sel-input" id="shiftStaff"></select>
+        <div class="field-lbl sans">Área</div>
+        <select class="sel-input" id="shiftArea">
+          <option value="handson">Hands-on</option>
+          <option value="palestra">Palestra</option>
+        </select>
+        <div class="field-lbl sans">Dia</div>
+        <input class="txt-input" type="date" id="shiftDay">
+        <div class="btn-row" style="margin-top:0;">
+          <div>
+            <div class="field-lbl sans">Início</div>
+            <input class="txt-input num-input" type="text" id="shiftStart" placeholder="09:00">
+          </div>
+          <div>
+            <div class="field-lbl sans">Fim</div>
+            <input class="txt-input num-input" type="text" id="shiftEnd" placeholder="13:00">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="addShift" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            Adicionar à escala
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Escala cadastrada</div>
+        <div id="shiftsList" style="max-height:420px; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <div class="card-title" style="margin-top:1.6rem;">Almoço — copa para 2 pessoas</div>
+    <div class="two-col" style="margin-top:0.5rem;">
+      <div class="card">
+        <div class="card-title">Copa agora</div>
+        <div id="lunchCurrent"></div>
+        <div class="card-title" style="margin-top:1rem;">Fila de espera</div>
+        <ul class="list" id="lunchQueue"></ul>
+        <div class="card-title" style="margin-top:1rem;">Já almoçaram hoje</div>
+        <ul class="list" id="lunchHistory"></ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Equipe (Comercial + Técnica)</div>
+        <ul class="list" id="staffList" style="max-height:none;"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAINEL -->
+  <section class="panel" id="panel-painel">
+    <h2>Painel do Administrador</h2>
+    <p class="sub">Visão ao vivo consolidada — atualiza sozinho conforme qualquer tablet ou visitante registra algo.</p>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="num" id="statCheckedIn">0</div><div class="lbl"><span class="live-dot"></span>Check-ins feitos hoje</div></div>
+      <div class="stat-tile"><div class="num" id="statAguardando">0</div><div class="lbl">Confirmados aguardando chegada</div></div>
+      <div class="stat-tile"><div class="num" id="statFila">0</div><div class="lbl">Na fila de espera</div></div>
+      <div class="stat-tile"><div class="num" id="statBrindes">0</div><div class="lbl">Brindes já entregues</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-title">Quem está de plantão agora</div>
+      <div id="painelShiftBox" class="sans"></div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-title">Almoço agora</div>
+      <div id="painelLunchBox" class="sans"></div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-title">Alertas</div>
+      <ul class="alert-list" id="alertList"></ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    Sistema em operação — os dados registrados aqui já valem como registro real do dia. 27–30/01/2027 · 44º CIOSP · Expo Center Norte, SP.
+  </footer>
+</div>
+
+<nav class="tabbar" role="tablist">
+  <div class="tabbar-inner">
+    <button class="tab-btn active" data-tab="checkin" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.2 12.3l2.5 2.5 5-5.2"/></svg>
+      <span>Check-in</span>
+    </button>
+    <button class="tab-btn" data-tab="saida" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="11" rx="1.2"/><path d="M3 9V7a2 2 0 0 1 2-2h4.5l2.5 2.5L14.5 5H19a2 2 0 0 1 2 2v2"/><path d="M12 9v11"/></svg>
+      <span>Saída</span>
+    </button>
+    <button class="tab-btn" data-tab="agenda" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg>
+      <span>Agenda</span>
+    </button>
+    <button class="tab-btn" data-tab="equipe" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.3 2.5-5.8 5.5-5.8s5.5 2.5 5.5 5.8"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 13.9c1.9.5 3.3 2.4 3.3 4.6"/></svg>
+      <span>Equipe</span>
+    </button>
+    <button class="tab-btn" data-tab="painel" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2.5 20h19"/></svg>
+      <span>Painel</span>
+    </button>
+  </div>
+</nav>
+
+<button class="help-fab" id="helpFab" type="button">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.3"/><path d="M6.4 6.4l2.9 2.9M17.6 6.4l-2.9 2.9M6.4 17.6l2.9-2.9M17.6 17.6l-2.9-2.9"/></svg>
+  Ajuda
+</button>
+<div class="help-menu" id="helpMenu">
+  <div class="lbl">O que está acontecendo?</div>
+  <button data-reason="Fila grande, precisa de reforço" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.3 2.5-5.8 5.5-5.8s5.5 2.5 5.5 5.8"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 13.9c1.9.5 3.3 2.4 3.3 4.6"/></svg>
+    Fila grande
+  </button>
+  <button data-reason="Problema técnico no tablet" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+    Problema técnico
+  </button>
+  <button data-reason="Outro problema no estande" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 3.9 2.9 18a1.7 1.7 0 0 0 1.5 2.5h15.2a1.7 1.7 0 0 0 1.5-2.5L13.4 3.9a1.7 1.7 0 0 0-2.8 0Z"/><path d="M12 9.5v4"/><path d="M12 16.7h.01"/></svg>
+    Outro problema
+  </button>
+</div>
+
+<div class="cam-modal" id="camModal">
+  <video id="camVideo" autoplay playsinline muted></video>
+  <div class="hint" id="camHint">Aponte a câmera pro QR do visitante</div>
+  <button type="button" id="camCancel">Cancelar</button>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://kxpjahlealjdpbhcdkld.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4cGphaGxlYWxqZHBiaGNka2xkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTA4NjAsImV4cCI6MjEwMjgyNjg2MH0._bQmx6vHg5QXwrhykDCsig0Ej99cRCJwWbuCplB4KeY';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const LUNCH_LIMIT_MIN = 40;
+
+const $ = (id) => document.getElementById(id);
+const fmtDT = (iso) => {
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const hh = String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0");
+  return sameDay ? hh : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) + " " + hh;
+};
+
+function showToast(msg) {
+  const t = document.createElement("div");
+  t.className = "toast";
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 250); }, 2600);
+}
+function setConn(ok) {
+  const el = $("connStatus");
+  el.className = "status-pill sans " + (ok ? "ok" : "bad");
+  el.innerHTML = '<span class="dot"></span>' + (ok ? "ao vivo" : "sem conexão");
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    $("panel-" + btn.dataset.tab).classList.add("active");
+  });
+});
+
+/* ---------- Câmera (leitura de QR) ---------- */
+let camStream = null;
+function closeCamModal() {
+  $("camModal").classList.remove("open");
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+}
+async function openCamScan(onResult) {
+  if (!("BarcodeDetector" in window)) {
+    showToast("Este navegador não suporta câmera pra QR. Use um leitor USB/Bluetooth ou digite o código.");
+    return;
+  }
+  const detector = new BarcodeDetector({ formats: ["qr_code"] });
+  const video = $("camVideo");
+  $("camModal").classList.add("open");
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  } catch (e) {
+    showToast("Não consegui acessar a câmera: " + e.message);
+    closeCamModal();
+    return;
+  }
+  video.srcObject = camStream;
+  const timer = setInterval(async () => {
+    try {
+      const codes = await detector.detect(video);
+      if (codes.length > 0) {
+        clearInterval(timer);
+        closeCamModal();
+        onResult(codes[0].rawValue);
+      }
+    } catch (e) { /* frame não pronto ainda, ignora */ }
+  }, 350);
+  $("camCancel").onclick = () => { clearInterval(timer); closeCamModal(); };
+}
+
+/* ---------- Estado local (cache das tabelas, espelha o banco) ---------- */
+let CHECKINS = [];
+let STAFF = [];
+let LUNCH_QUEUE = [];
+let LUNCH_CURRENT = null;
+let LUNCH_HISTORY = [];
+let ALERTS = [];
+let SESSIONS = [];
+let SHIFTS = [];
+
+function sessionFillCount(sessionId) {
+  return CHECKINS.filter(c => c.session_id === sessionId && (c.status === "confirmed" || c.status === "checked_in")).length;
+}
+function sessionLabel(sessionId) {
+  const s = SESSIONS.find(x => x.id === sessionId);
+  return s ? fmtDT(s.session_time) + " · " + s.title : "sessão removida";
+}
+
+/* ---------- Check-in por QR ---------- */
+function showQrResult(kind, text) {
+  const el = $("qrScanResult");
+  el.style.display = "block";
+  el.className = "badge-recognized " + (kind === "ok" ? "ok" : kind === "warn" ? "warn" : "bad");
+  el.textContent = text;
+}
+async function processQrCheckin(token) {
+  if (!token) return;
+  const { data, error } = await supabase.rpc("checkin_by_qr", { p_token: token });
+  if (error) { showQrResult("bad", "Erro: " + error.message); return; }
+  const row = data && data[0];
+  if (!row) { showQrResult("bad", "QR não reconhecido."); return; }
+  const activityLbl = row.out_activity === "handson" ? "Hands-on" : "Palestra";
+  if (row.out_result === "ok") {
+    showQrResult("ok", "✓ Check-in feito: " + row.out_name + " (" + activityLbl + ") — entregar pulseira " + row.out_wristband);
+    showToast("Check-in confirmado — pulseira " + row.out_wristband);
+  } else if (row.out_result === "already") {
+    showQrResult("warn", "Check-in já tinha sido feito antes: " + row.out_name + " — pulseira " + row.out_wristband);
+  } else if (row.out_result === "waitlisted") {
+    showQrResult("warn", row.out_name + " ainda está na fila de espera — sem vaga confirmada ainda.");
+  } else if (row.out_result === "expired") {
+    showQrResult("bad", "Essa inscrição não é mais válida (desistência ou cancelada).");
+  } else {
+    showQrResult("bad", "QR não encontrado no sistema.");
+  }
+  $("qrScanInput").value = "";
+}
+$("qrScanInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); processQrCheckin($("qrScanInput").value.trim()); }
+});
+$("qrScanBtn").addEventListener("click", () => processQrCheckin($("qrScanInput").value.trim()));
+$("qrScanCam").addEventListener("click", () => openCamScan((code) => { $("qrScanInput").value = code; processQrCheckin(code); }));
+
+function renderWaiting() {
+  ["handson", "palestra"].forEach(act => {
+    const list = $(act === "handson" ? "waitingHandson" : "waitingPalestra");
+    const items = CHECKINS.filter(c => c.activity === act && c.status === "confirmed")
+      .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+    if (items.length === 0) { list.innerHTML = '<li class="list-empty">Ninguém aguardando no momento.</li>'; return; }
+    list.innerHTML = "";
+    items.forEach(c => {
+      const row = document.createElement("li");
+      row.className = "list-row";
+      row.innerHTML = `<span>${c.visitor_name}<span class="meta"> · ${sessionLabel(c.session_id)}</span></span>`;
+      const btn = document.createElement("button");
+      btn.className = "small-btn"; btn.type = "button"; btn.textContent = "Check-in";
+      btn.addEventListener("click", () => processQrCheckin(c.qr_token));
+      row.appendChild(btn);
+      list.appendChild(row);
+    });
+  });
+}
+
+function populateManualSessionSelect() {
+  const sel = $("manualSession");
+  const prev = sel.value;
+  const sorted = [...SESSIONS].sort((a,b) => new Date(a.session_time) - new Date(b.session_time));
+  if (sorted.length === 0) { sel.innerHTML = '<option value="">Nenhuma sessão cadastrada — vá em Agenda</option>'; return; }
+  sel.innerHTML = sorted.map(s => {
+    const filled = sessionFillCount(s.id);
+    const full = filled >= s.capacity;
+    const lbl = (s.activity === "handson" ? "Hands-on" : "Palestra") + " · " + fmtDT(s.session_time) + " · " + s.title;
+    return `<option value="${s.id}" ${full ? "disabled" : ""}>${lbl} (${filled}/${s.capacity}${full ? " · lotada" : ""})</option>`;
+  }).join("");
+  if (prev && sorted.some(s => String(s.id) === prev)) sel.value = prev;
+}
+$("manualCheckinBtn").addEventListener("click", async () => {
+  const sessionId = $("manualSession").value;
+  const name = $("manualName").value.trim();
+  if (!sessionId) { showToast("Escolha uma sessão."); return; }
+  if (!name) { showToast("Digite o nome do visitante."); return; }
+  const info = $("manualInfo").value.trim();
+  const { data, error } = await supabase.rpc("manual_checkin", { p_session_id: parseInt(sessionId,10), p_name: name, p_info: info || null });
+  if (error) { showToast("Erro: " + error.message); return; }
+  const row = data && data[0];
+  if (row && row.out_status === "lotada") { showToast("Sessão lotada — escolha outra."); return; }
+  $("manualName").value = ""; $("manualInfo").value = "";
+  showToast("Cadastrado e check-in feito — pulseira " + (row ? row.out_wristband : "") + ".");
+});
+
+/* ---------- Saída ---------- */
+let redeemFilterToken = null;
+function renderRedeem() {
+  const container = $("redeemList");
+  let pendentes = CHECKINS.filter(c => c.status === "checked_in" && !c.redeemed).sort((a,b) => new Date(a.checked_in_at) - new Date(b.checked_in_at));
+  if (redeemFilterToken) pendentes = pendentes.filter(c => c.qr_token === redeemFilterToken);
+  if (pendentes.length === 0) {
+    container.innerHTML = redeemFilterToken
+      ? '<div class="list-empty sans">Esse QR não tem brinde pendente (já resgatou, ou ainda não fez check-in).</div>'
+      : '<div class="list-empty sans">Nenhum brinde aguardando resgate.</div>';
+    return;
+  }
+  container.innerHTML = "";
+  pendentes.forEach(c => {
+    const row = document.createElement("div");
+    row.className = "list-row";
+    const activityLbl = c.activity === "handson" ? "Hands-on" : "Palestra";
+    row.innerHTML = `<span>${c.visitor_name} · ${activityLbl} · ${c.wristband}</span>`;
+    const btn = document.createElement("button");
+    btn.className = "small-btn"; btn.type = "button"; btn.textContent = "🎁 Entregar brinde";
+    btn.addEventListener("click", async () => {
+      const { error } = await supabase.from("checkins").update({ redeemed: true }).eq("id", c.id);
+      if (error) { showToast("Erro: " + error.message); return; }
+      showToast("Brinde entregue — " + c.wristband + " marcado como retirado.");
+    });
+    row.appendChild(btn);
+    container.appendChild(row);
+  });
+}
+$("badgeSaida").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); redeemFilterToken = $("badgeSaida").value.trim() || null; renderRedeem(); }
+});
+$("camSaida").addEventListener("click", () => openCamScan((code) => { $("badgeSaida").value = code; redeemFilterToken = code; renderRedeem(); }));
+$("clearSaida").addEventListener("click", () => { $("badgeSaida").value = ""; redeemFilterToken = null; renderRedeem(); });
+
+/* ---------- Agenda ---------- */
+function renderSessions() {
+  const list = $("sessionsList");
+  const sorted = [...SESSIONS].sort((a,b) => new Date(a.session_time) - new Date(b.session_time));
+  if (sorted.length === 0) { list.innerHTML = '<li class="list-empty">Nenhuma sessão cadastrada ainda.</li>'; return; }
+  list.innerHTML = "";
+  sorted.forEach(s => {
+    const filled = sessionFillCount(s.id);
+    const full = filled >= s.capacity;
+    const row = document.createElement("li");
+    row.className = "list-row";
+    const label = (s.activity === "handson" ? "Hands-on" : "Palestra") + " · " + s.title;
+    row.innerHTML = `<span>${fmtDT(s.session_time)}<span class="meta"> · ${label}</span></span>`;
+    const right = document.createElement("span");
+    right.style.display = "flex"; right.style.gap = "0.4rem"; right.style.alignItems = "center";
+    right.innerHTML = `<span class="fill-tag ${full ? "full" : "ok"}">${filled}/${s.capacity}</span>`;
+    const del = document.createElement("button");
+    del.className = "small-btn danger"; del.type = "button"; del.textContent = "Remover";
+    del.addEventListener("click", async () => {
+      const { error } = await supabase.from("sessions").delete().eq("id", s.id);
+      if (error) showToast("Erro: " + error.message);
+    });
+    right.appendChild(del);
+    row.appendChild(right);
+    list.appendChild(row);
+  });
+  populateManualSessionSelect();
+}
+$("addSession").addEventListener("click", async () => {
+  const activity = $("newSessionActivity").value;
+  const title = $("newSessionTitle").value.trim() || (activity === "handson" ? "Bancada" : "Palestra");
+  const timeVal = $("newSessionTime").value;
+  if (!timeVal) { showToast("Escolha data e horário da sessão."); return; }
+  const capacity = parseInt($("newSessionCapacity").value, 10) || 8;
+  const { error } = await supabase.from("sessions").insert({ activity, title, session_time: new Date(timeVal).toISOString(), capacity });
+  if (error) { showToast("Erro: " + error.message); return; }
+  $("newSessionTitle").value = "";
+  showToast("Sessão adicionada.");
+});
+
+/* ---------- Escala de turnos ---------- */
+function populateShiftStaffSelect() {
+  $("shiftStaff").innerHTML = STAFF.map(s => `<option value="${s.id}">${s.name} (${s.team})</option>`).join("");
+}
+function isShiftNow(shift) {
+  const today = new Date().toISOString().slice(0,10);
+  if (shift.day !== today) return false;
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const [sh, sm] = shift.start_time.split(":").map(Number);
+  const [eh, em] = shift.end_time.split(":").map(Number);
+  const start = sh * 60 + (sm || 0), end = eh * 60 + (em || 0);
+  return cur >= start && cur <= end;
+}
+function renderShifts() {
+  const box = $("shiftsList");
+  if (SHIFTS.length === 0) { box.innerHTML = '<div class="list-empty sans">Nenhuma escala cadastrada ainda.</div>'; return; }
+  const byDay = {};
+  SHIFTS.forEach(s => { (byDay[s.day] = byDay[s.day] || []).push(s); });
+  const days = Object.keys(byDay).sort();
+  box.innerHTML = "";
+  days.forEach(day => {
+    const dayEl = document.createElement("div");
+    dayEl.className = "shift-day";
+    dayEl.textContent = new Date(day + "T00:00:00").toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    box.appendChild(dayEl);
+    byDay[day].sort((a,b) => a.start_time.localeCompare(b.start_time)).forEach(s => {
+      const staff = STAFF.find(x => x.id === s.staff_id);
+      const row = document.createElement("div");
+      row.className = "list-row";
+      const now = isShiftNow(s);
+      row.innerHTML = `<span>${staff ? staff.name : "?"}${now ? '<span class="shift-now">agora</span>' : ""}<span class="meta"> · ${s.area === "handson" ? "Hands-on" : "Palestra"} · ${s.start_time}–${s.end_time}</span></span>`;
+      const del = document.createElement("button");
+      del.className = "small-btn danger"; del.type = "button"; del.textContent = "Remover";
+      del.addEventListener("click", async () => { await supabase.from("shifts").delete().eq("id", s.id); });
+      row.appendChild(del);
+      box.appendChild(row);
+    });
+  });
+}
+$("addShift").addEventListener("click", async () => {
+  const staffId = parseInt($("shiftStaff").value, 10);
+  const area = $("shiftArea").value;
+  const day = $("shiftDay").value;
+  const start = $("shiftStart").value.trim();
+  const end = $("shiftEnd").value.trim();
+  if (!day || !start || !end) { showToast("Preencha dia, início e fim."); return; }
+  const { error } = await supabase.from("shifts").insert({ staff_id: staffId, area, day, start_time: start, end_time: end });
+  if (error) { showToast("Erro: " + error.message); return; }
+  showToast("Adicionado à escala.");
+});
+
+/* ---------- Equipe / Almoço ---------- */
+function renderStaff() {
+  const list = $("staffList");
+  list.innerHTML = STAFF.map(s => {
+    let action = "";
+    if (s.status === "pending") action = `<button class="small-btn btn-entrar-fila" data-staff-id="${s.id}" type="button">Entrar na fila</button>`;
+    else if (s.status === "queued") action = '<span class="status-tag queued">na fila</span>';
+    else if (s.status === "eating") action = '<span class="status-tag eating">almoçando</span>';
+    else action = '<span class="status-tag done">✓ já almoçou</span>';
+    return `<li class="staff-row"><span>${s.name}<span class="team-tag">${s.team}</span></span><span>${action}</span></li>`;
+  }).join("");
+  list.querySelectorAll(".btn-entrar-fila").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const { error } = await supabase.rpc("enter_lunch_queue", { p_staff_id: parseInt(btn.dataset.staffId, 10) });
+      if (error) showToast("Erro: " + error.message);
+    });
+  });
+  populateShiftStaffSelect();
+}
+
+function staffName(id) { const s = STAFF.find(x => x.id === id); return s ? s.name : "?"; }
+
+function renderLunch() {
+  const cur = $("lunchCurrent");
+  if (LUNCH_CURRENT) {
+    const elapsed = Math.round((Date.now() - new Date(LUNCH_CURRENT.start_time).getTime()) / 60000);
+    const over = elapsed > LUNCH_LIMIT_MIN;
+    cur.innerHTML = `<div class="lunch-slot filled ${over ? "over" : ""}">
+      <div class="names">🍽 ${LUNCH_CURRENT.member_names}</div>
+      <div class="timer">${elapsed} min desde o início${over ? " — acima do limite de " + LUNCH_LIMIT_MIN + " min" : ""}</div>
+      </div>
+      <div style="margin-top:0.6rem;"><button class="primary-btn" id="btnVoltou" type="button">✅ Dupla voltou</button></div>`;
+    $("btnVoltou").addEventListener("click", async () => {
+      const { error } = await supabase.rpc("return_from_lunch", { p_session_id: LUNCH_CURRENT.id });
+      if (error) showToast("Erro: " + error.message);
+    });
+  } else {
+    cur.innerHTML = `<div class="lunch-slot">Copa livre no momento${LUNCH_QUEUE.length > 0 ? " — chamando a próxima dupla..." : ""}.</div>`;
+  }
+
+  const q = $("lunchQueue");
+  q.innerHTML = LUNCH_QUEUE.length === 0
+    ? '<li class="list-empty">Fila vazia.</li>'
+    : LUNCH_QUEUE.map((row, i) => `<li class="list-row"><span>${i+1}. ${staffName(row.staff_id)}</span></li>`).join("");
+
+  const h = $("lunchHistory");
+  h.innerHTML = LUNCH_HISTORY.length === 0
+    ? '<li class="list-empty">Ninguém ainda.</li>'
+    : LUNCH_HISTORY.map(s => {
+        const mins = Math.round((new Date(s.end_time) - new Date(s.start_time)) / 60000);
+        return `<li class="list-row"><span>${s.member_names}</span><span class="meta">${mins} min</span></li>`;
+      }).join("");
+}
+
+/* ---------- Painel ---------- */
+function renderPainel() {
+  $("statCheckedIn").textContent = CHECKINS.filter(c => c.status === "checked_in").length;
+  $("statAguardando").textContent = CHECKINS.filter(c => c.status === "confirmed").length;
+  $("statFila").textContent = CHECKINS.filter(c => c.status === "waitlisted").length;
+  $("statBrindes").textContent = CHECKINS.filter(c => c.redeemed).length;
+  const done = STAFF.filter(s => s.status === "done").length;
+
+  const shiftBox = $("painelShiftBox");
+  const nowShifts = SHIFTS.filter(isShiftNow);
+  shiftBox.innerHTML = nowShifts.length === 0
+    ? '<div style="font-size:0.85rem;color:var(--ink-soft);">Nenhum turno cadastrado pra este horário.</div>'
+    : nowShifts.map(s => {
+        const staff = STAFF.find(x => x.id === s.staff_id);
+        return `<div style="font-size:0.85rem; margin-bottom:0.2rem;">🟢 ${staff ? staff.name : "?"} — ${s.area === "handson" ? "Hands-on" : "Palestra"}</div>`;
+      }).join("");
+
+  const lb = $("painelLunchBox");
+  let html = "";
+  if (LUNCH_CURRENT) {
+    const elapsed = Math.round((Date.now() - new Date(LUNCH_CURRENT.start_time).getTime()) / 60000);
+    html += `<div style="font-size:0.85rem;">🍽 ${LUNCH_CURRENT.member_names} — ${elapsed} min${elapsed > LUNCH_LIMIT_MIN ? ' <span style="color:var(--brick);font-weight:700;">(acima do limite)</span>' : ''}</div>`;
+  } else {
+    html += '<div style="font-size:0.85rem;color:var(--ink-soft);">Copa livre no momento.</div>';
+  }
+  html += `<div style="font-size:0.78rem;color:var(--ink-soft);margin-top:0.4rem;">Fila de espera: ${LUNCH_QUEUE.length} · Já almoçaram: ${done} de ${STAFF.length}</div>`;
+  lb.innerHTML = html;
+}
+
+function renderAlerts() {
+  const list = $("alertList");
+  if (ALERTS.length === 0) { list.innerHTML = '<li class="alert-empty">Nenhum alerta no momento.</li>'; return; }
+  list.innerHTML = ALERTS.slice(0, 20).map(a =>
+    `<li class="alert-row"><span class="txt">${a.text}</span><span class="time">${new Date(a.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</span></li>`
+  ).join("");
+}
+
+function renderAll() { renderWaiting(); renderRedeem(); renderSessions(); renderStaff(); renderShifts(); renderLunch(); renderPainel(); renderAlerts(); populateManualSessionSelect(); }
+
+/* ---------- Vigia: almoço estourado + desistências (roda em qualquer tablet aberto) ---------- */
+async function checkOvertime() {
+  if (!LUNCH_CURRENT) return;
+  const elapsed = Math.round((Date.now() - new Date(LUNCH_CURRENT.start_time).getTime()) / 60000);
+  if (elapsed > LUNCH_LIMIT_MIN) {
+    const already = ALERTS.some(a => a.text.includes(LUNCH_CURRENT.member_names) && a.text.includes("almoço"));
+    if (!already) await supabase.from("alerts").insert({ text: `${LUNCH_CURRENT.member_names} estão no almoço há ${elapsed} min (limite: ${LUNCH_LIMIT_MIN} min)` });
+  }
+}
+setInterval(() => {
+  renderLunch(); renderPainel(); checkOvertime();
+  supabase.rpc("expire_noshows");
+}, 20000);
+
+/* ---------- Help FAB ---------- */
+$("helpFab").addEventListener("click", () => $("helpMenu").classList.toggle("open"));
+$("helpMenu").querySelectorAll("button[data-reason]").forEach(b => {
+  b.addEventListener("click", async () => {
+    $("helpMenu").classList.remove("open");
+    const { error } = await supabase.from("alerts").insert({ text: b.dataset.reason });
+    if (!error) showToast("Enviado para a coordenação ✓");
+  });
+});
+document.addEventListener("click", (e) => {
+  if (!$("helpMenu").contains(e.target) && e.target !== $("helpFab")) $("helpMenu").classList.remove("open");
+});
+
+/* ---------- Carga inicial + assinaturas em tempo real ---------- */
+async function loadAll() {
+  const [ci, st, lq, ls, al, se, sh] = await Promise.all([
+    supabase.from("checkins").select("*"),
+    supabase.from("staff").select("*").order("id"),
+    supabase.from("lunch_queue").select("*").order("joined_at"),
+    supabase.from("lunch_sessions").select("*"),
+    supabase.from("alerts").select("*").order("created_at", { ascending: false }).limit(30),
+    supabase.from("sessions").select("*"),
+    supabase.from("shifts").select("*")
+  ]);
+  CHECKINS = ci.data || [];
+  STAFF = st.data || [];
+  LUNCH_QUEUE = lq.data || [];
+  LUNCH_CURRENT = (ls.data || []).find(s => !s.end_time) || null;
+  LUNCH_HISTORY = (ls.data || []).filter(s => s.end_time).sort((a,b) => new Date(b.end_time) - new Date(a.end_time));
+  ALERTS = al.data || [];
+  SESSIONS = se.data || [];
+  SHIFTS = sh.data || [];
+  renderAll();
+  supabase.rpc("expire_noshows");
+}
+
+function subscribeRealtime() {
+  supabase.channel("sistema-tecnica")
+    .on("postgres_changes", { event: "*", schema: "public", table: "checkins" }, async () => {
+      const { data } = await supabase.from("checkins").select("*");
+      CHECKINS = data || [];
+      renderWaiting(); renderRedeem(); renderSessions(); renderPainel(); populateManualSessionSelect();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "staff" }, async () => {
+      const { data } = await supabase.from("staff").select("*").order("id");
+      STAFF = data || [];
+      renderStaff(); renderShifts(); renderPainel();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "lunch_queue" }, async () => {
+      const { data } = await supabase.from("lunch_queue").select("*").order("joined_at");
+      LUNCH_QUEUE = data || [];
+      renderLunch(); renderPainel();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "lunch_sessions" }, async () => {
+      const { data } = await supabase.from("lunch_sessions").select("*");
+      LUNCH_CURRENT = (data || []).find(s => !s.end_time) || null;
+      LUNCH_HISTORY = (data || []).filter(s => s.end_time).sort((a,b) => new Date(b.end_time) - new Date(a.end_time));
+      renderLunch(); renderPainel();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "alerts" }, async () => {
+      const { data } = await supabase.from("alerts").select("*").order("created_at", { ascending: false }).limit(30);
+      ALERTS = data || [];
+      renderAlerts();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "sessions" }, async () => {
+      const { data } = await supabase.from("sessions").select("*");
+      SESSIONS = data || [];
+      renderSessions();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "shifts" }, async () => {
+      const { data } = await supabase.from("shifts").select("*");
+      SHIFTS = data || [];
+      renderShifts(); renderPainel();
+    })
+    .subscribe((status) => { setConn(status === "SUBSCRIBED"); });
+}
+
+loadAll().then(subscribeRealtime).catch(err => { setConn(false); showToast("Erro ao carregar: " + err.message); });
+</script>
+</body>
+</html>

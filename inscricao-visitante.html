@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscrição — Biodinâmica CIOSP 2027</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+  :root {
+    --paper: #f5f3ec; --paper-raised: #ffffff; --ink: #16241f; --ink-soft: #4b5850;
+    --teal: #0b4f45; --teal-deep: #082e28; --on-teal: #ffffff; --mint: #dfece5;
+    --amber: #b96a1f; --amber-soft: #f2e2cd; --stone-line: #e4dfd0;
+    --good: #2f7d4f; --crit: #a83a3a; --crit-soft: #f3e4e1;
+    --shadow: 0 1px 2px rgba(22,36,31,0.06), 0 8px 24px -12px rgba(22,36,31,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --paper:#0e1815; --paper-raised:#142621; --ink:#eef2ef; --ink-soft:#a9b8b1; --teal:#6fbfa8; --teal-deep:#d7ece5; --on-teal:#0e1815; --mint:#17332c; --amber:#e2a15c; --amber-soft:#2c2418; --stone-line:#253630; --good:#6fbf8f; --crit:#e2807a; --crit-soft:#33201d; --shadow:0 1px 2px rgba(0,0,0,0.3),0 8px 24px -12px rgba(0,0,0,0.5); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Segoe UI", Corbel, "Helvetica Neue", Arial, sans-serif; line-height: 1.5; }
+  .wrap { max-width: 460px; margin: 0 auto; padding: 1.6rem 1.2rem 3rem; min-height: 100vh; }
+  header { text-align: center; margin-bottom: 1.4rem; }
+  .eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.68rem; color: var(--teal); font-weight: 700; }
+  h1 { font-size: 1.3rem; margin: 0.3rem 0 0.2rem; color: var(--teal-deep); font-weight: 700; }
+  .dek { font-size: 0.86rem; color: var(--ink-soft); margin: 0; }
+
+  .card { border: 1px solid var(--stone-line); border-radius: 14px; padding: 1.2rem; background: var(--paper-raised); box-shadow: var(--shadow); margin-bottom: 1rem; }
+
+  .big-choice { display: flex; flex-direction: column; gap: 0.8rem; }
+  .choice-btn { border: 2px solid var(--stone-line); background: var(--paper-raised); border-radius: 14px; padding: 1.1rem 1.2rem; text-align: left; cursor: pointer; font-family: inherit; }
+  .choice-btn .t { font-size: 1.05rem; font-weight: 700; color: var(--ink); }
+  .choice-btn .s { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.2rem; }
+  .choice-btn.sel { border-color: var(--teal); background: var(--mint); }
+
+  .sess-row { border: 1px solid var(--stone-line); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 0.6rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; }
+  .sess-row.sel { border-color: var(--teal); background: var(--mint); }
+  .sess-row .t { font-weight: 700; font-size: 0.92rem; color: var(--ink); }
+  .sess-row .s { font-size: 0.78rem; color: var(--ink-soft); }
+  .tag { font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 999px; white-space: nowrap; }
+  .tag.ok { background: var(--mint); color: var(--teal-deep); }
+  .tag.wait { background: var(--amber-soft); color: var(--amber); }
+
+  .field-lbl { font-size: 0.72rem; color: var(--ink-soft); margin: 0.7rem 0 0.25rem; }
+  .txt-input { width: 100%; border: 1px solid var(--stone-line); border-radius: 10px; padding: 0.7rem 0.8rem; font-size: 0.95rem; background: var(--paper); color: var(--ink); }
+  .txt-input:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+
+  .primary-btn { width: 100%; background: var(--teal); color: var(--on-teal); border: none; border-radius: 12px; padding: 0.85rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; margin-top: 1rem; }
+  .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .ghost-btn { width: 100%; background: transparent; border: 1px solid var(--stone-line); color: var(--ink-soft); border-radius: 10px; padding: 0.6rem; font-weight: 700; font-size: 0.85rem; cursor: pointer; margin-top: 0.6rem; }
+
+  .empty { text-align: center; color: var(--ink-soft); font-size: 0.88rem; padding: 1rem 0; }
+
+  .confirm-box { text-align: center; }
+  .confirm-box .status-tag { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.8rem; border-radius: 999px; margin-bottom: 0.9rem; }
+  .confirm-box .status-tag.confirmed { background: var(--mint); color: var(--teal-deep); }
+  .confirm-box .status-tag.waitlisted { background: var(--amber-soft); color: var(--amber); }
+  .confirm-box canvas { border-radius: 10px; margin: 0.4rem 0 1rem; }
+  .confirm-box .instr { font-size: 0.88rem; color: var(--ink); margin-bottom: 0.4rem; }
+  .confirm-box .meta { font-size: 0.8rem; color: var(--ink-soft); }
+  .confirm-box .wait-num { font-size: 2rem; font-weight: 700; color: var(--amber); margin: 0.5rem 0; }
+
+  .toast { position: fixed; top: 1rem; left: 50%; transform: translateX(-50%); background: var(--teal-deep); color: #fff; padding: 0.6rem 1rem; border-radius: 10px; font-size: 0.82rem; z-index: 70; opacity: 0; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Biodinâmica · CIOSP 2027</span>
+    <h1>Inscreva-se no hands-on ou palestra</h1>
+    <p class="dek">A inscrição abre 1 hora antes de cada sessão. Você recebe um QR — mostre pra equipe 15 min antes do horário.</p>
+  </header>
+
+  <div id="app"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL = 'https://kxpjahlealjdpbhcdkld.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4cGphaGxlYWxqZHBiaGNka2xkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyNTA4NjAsImV4cCI6MjEwMjgyNjg2MH0._bQmx6vHg5QXwrhykDCsig0Ej99cRCJwWbuCplB4KeY';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const app = document.getElementById("app");
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2400);
+}
+const fmtDT = (iso) => {
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const hh = String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0");
+  return sameDay ? hh : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) + " " + hh;
+};
+
+let state = { activity: null, sessionId: null, sessions: [] };
+
+/* ---------- Tela: escolher atividade ---------- */
+function renderActivityChoice() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="big-choice">
+        <button class="choice-btn" id="choiceHandson" type="button">
+          <div class="t">🦷 Hands-on</div>
+          <div class="s">Demonstração prática na bancada</div>
+        </button>
+        <button class="choice-btn" id="choicePalestra" type="button">
+          <div class="t">🎤 Palestra</div>
+          <div class="s">Apresentação no auditório do estande</div>
+        </button>
+      </div>
+    </div>`;
+  document.getElementById("choiceHandson").addEventListener("click", () => { state.activity = "handson"; loadSessions(); });
+  document.getElementById("choicePalestra").addEventListener("click", () => { state.activity = "palestra"; loadSessions(); });
+}
+
+/* ---------- Tela: escolher sessão ---------- */
+async function loadSessions() {
+  app.innerHTML = `<div class="empty">Carregando sessões...</div>`;
+  const now = new Date();
+  const { data: sessions } = await supabase.from("sessions").select("*").eq("activity", state.activity);
+  const { data: checkins } = await supabase.from("checkins").select("session_id,status");
+  const open = (sessions || []).filter(s => {
+    const t = new Date(s.session_time);
+    const opensAt = new Date(t.getTime() - 60 * 60000);
+    return now >= opensAt && now <= t;
+  }).sort((a,b) => new Date(a.session_time) - new Date(b.session_time));
+
+  renderSessionList(open, checkins || []);
+}
+
+function renderSessionList(sessions, checkins) {
+  const label = state.activity === "handson" ? "Hands-on" : "Palestra";
+  let html = `<div class="card"><div class="field-lbl">Sessões abertas agora — ${label}</div>`;
+  if (sessions.length === 0) {
+    html += `<div class="empty">Nenhuma sessão com inscrição aberta no momento.<br>A inscrição abre 1h antes do início de cada sessão.</div>`;
+  } else {
+    sessions.forEach(s => {
+      const filled = checkins.filter(c => c.session_id === s.id && (c.status === "confirmed" || c.status === "checked_in")).length;
+      const full = filled >= s.capacity;
+      html += `<div class="sess-row" data-id="${s.id}">
+        <div><div class="t">${fmtDT(s.session_time)} · ${s.title}</div><div class="s">${filled}/${s.capacity} vagas</div></div>
+        <span class="tag ${full ? "wait" : "ok"}">${full ? "fila de espera" : "vaga livre"}</span>
+      </div>`;
+    });
+  }
+  html += `</div><button class="ghost-btn" id="backBtn" type="button">← Voltar</button>`;
+  app.innerHTML = html;
+  document.getElementById("backBtn").addEventListener("click", renderActivityChoice);
+  app.querySelectorAll(".sess-row").forEach(row => {
+    row.addEventListener("click", () => { state.sessionId = parseInt(row.dataset.id, 10); renderForm(); });
+  });
+}
+
+/* ---------- Tela: formulário ---------- */
+function renderForm() {
+  app.innerHTML = `
+    <div class="card">
+      <div class="field-lbl">Seu nome completo</div>
+      <input class="txt-input" type="text" id="fName" placeholder="Nome completo">
+      <div class="field-lbl">CRO / contato (opcional)</div>
+      <input class="txt-input" type="text" id="fInfo" placeholder="CRO-SP 00000 ou WhatsApp">
+      <button class="primary-btn" id="submitBtn" type="button">Confirmar inscrição</button>
+      <button class="ghost-btn" id="backBtn2" type="button">← Voltar</button>
+    </div>`;
+  document.getElementById("backBtn2").addEventListener("click", loadSessions);
+  document.getElementById("submitBtn").addEventListener("click", submitRegistration);
+}
+
+async function submitRegistration() {
+  const name = document.getElementById("fName").value.trim();
+  if (!name) { showToast("Digite seu nome."); return; }
+  const info = document.getElementById("fInfo").value.trim();
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Enviando...";
+  const { data, error } = await supabase.rpc("register_visitor", {
+    p_session_id: state.sessionId, p_name: name, p_info: info || null
+  });
+  if (error) { showToast("Erro: " + error.message); btn.disabled = false; btn.textContent = "Confirmar inscrição"; return; }
+  const row = data[0];
+  const token = row.out_token;
+  history.replaceState(null, "", "?r=" + token);
+  showConfirmation(token);
+}
+
+/* ---------- Tela: confirmação / QR / fila ---------- */
+let confirmChannel = null;
+async function showConfirmation(token) {
+  const { data: reg } = await supabase.from("checkins").select("*, sessions(*)").eq("qr_token", token).maybeSingle();
+  if (!reg) { app.innerHTML = `<div class="card empty">Inscrição não encontrada.</div>`; return; }
+
+  if (reg.status === "waitlisted") {
+    const { data: ahead } = await supabase.from("checkins")
+      .select("id, created_at").eq("session_id", reg.session_id).eq("status", "waitlisted");
+    const pos = (ahead || []).filter(a => a.created_at <= reg.created_at).length;
+    app.innerHTML = `
+      <div class="card confirm-box">
+        <span class="status-tag waitlisted">Na fila de espera</span>
+        <div class="wait-num">${pos}º</div>
+        <div class="instr">Assim que uma vaga abrir, você é chamado automaticamente e um QR aparece aqui.</div>
+        <div class="meta">Deixe esta página aberta — ela atualiza sozinha.</div>
+      </div>`;
+  } else if (reg.status === "confirmed" || reg.status === "checked_in") {
+    const activityLbl = reg.activity === "handson" ? "Hands-on" : "Palestra";
+    const sessTime = reg.sessions ? fmtDT(reg.sessions.session_time) : "";
+    app.innerHTML = `
+      <div class="card confirm-box">
+        <span class="status-tag confirmed">${reg.status === "checked_in" ? "Check-in feito ✓" : "Inscrição confirmada"}</span>
+        <div><canvas id="qrCanvas"></canvas></div>
+        <div class="instr"><b>${activityLbl}</b> — ${reg.sessions ? reg.sessions.title : ""} · ${sessTime}</div>
+        <div class="meta">${reg.status === "checked_in" ? "Sua pulseira já foi registrada — aproveite!" : "Chegue 15 min antes e mostre este QR pra equipe."}</div>
+      </div>`;
+    const canvas = document.getElementById("qrCanvas");
+    if (window.QRCode) window.QRCode.toCanvas(canvas, token, { width: 220, margin: 1, color: { dark: "#082e28" } });
+  } else {
+    app.innerHTML = `<div class="card confirm-box"><span class="status-tag waitlisted">Inscrição encerrada</span><div class="instr">Essa inscrição não está mais ativa (desistência ou cancelamento).</div></div>`;
+  }
+
+  if (confirmChannel) supabase.removeChannel(confirmChannel);
+  confirmChannel = supabase.channel("reg-" + token)
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "checkins", filter: "qr_token=eq." + token }, () => {
+      showConfirmation(token);
+    })
+    .subscribe();
+}
+
+/* ---------- Boot ---------- */
+const params = new URLSearchParams(location.search);
+const existingToken = params.get("r");
+if (existingToken) {
+  showConfirmation(existingToken);
+} else {
+  renderActivityChoice();
+}
+</script>
+</body>
+</html>

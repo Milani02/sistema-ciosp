@@ -1,0 +1,555 @@
+<meta charset="utf-8">
+<title>Simulador — Estande Biodinâmica CIOSP 2027</title>
+<style>
+  :root {
+    --paper: #f5f3ec;
+    --paper-raised: #ffffff;
+    --ink: #16241f;
+    --ink-soft: #4b5850;
+    --teal: #0b4f45;
+    --teal-deep: #082e28;
+    --on-teal: #ffffff;
+    --mint: #dfece5;
+    --amber: #b96a1f;
+    --amber-soft: #f2e2cd;
+    --stone-line: #e4dfd0;
+    --good: #2f7d4f;
+    --warn: #b96a1f;
+    --crit: #a83a3a;
+    --crit-soft: #f3e4e1;
+    --shadow: 0 1px 2px rgba(22,36,31,0.06), 0 8px 24px -12px rgba(22,36,31,0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0e1815; --paper-raised: #142621; --ink: #eef2ef; --ink-soft: #a9b8b1;
+      --teal: #6fbfa8; --teal-deep: #d7ece5; --on-teal: #0e1815; --mint: #17332c;
+      --amber: #e2a15c; --amber-soft: #2c2418; --stone-line: #253630;
+      --good: #6fbf8f; --warn: #e2a15c; --crit: #e2807a; --crit-soft: #33201d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0e1815; --paper-raised: #142621; --ink: #eef2ef; --ink-soft: #a9b8b1;
+    --teal: #6fbfa8; --teal-deep: #d7ece5; --on-teal: #0e1815; --mint: #17332c;
+    --amber: #e2a15c; --amber-soft: #2c2418; --stone-line: #253630;
+    --good: #6fbf8f; --warn: #e2a15c; --crit: #e2807a; --crit-soft: #33201d;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+  }
+  :root[data-theme="light"] {
+    --paper: #f5f3ec; --paper-raised: #ffffff; --ink: #16241f; --ink-soft: #4b5850;
+    --teal: #0b4f45; --teal-deep: #082e28; --on-teal: #ffffff; --mint: #dfece5;
+    --amber: #b96a1f; --amber-soft: #f2e2cd; --stone-line: #e4dfd0;
+    --good: #2f7d4f; --warn: #b96a1f; --crit: #a83a3a; --crit-soft: #f3e4e1;
+    --shadow: 0 1px 2px rgba(22,36,31,0.06), 0 8px 24px -12px rgba(22,36,31,0.18);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    line-height: 1.5;
+  }
+  .sans { font-family: "Segoe UI", Corbel, "Helvetica Neue", Arial, sans-serif; }
+  button { font: inherit; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 2.4rem 1.5rem 5rem; }
+
+  header.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.4rem;
+  }
+  .eyebrow {
+    font-family: "Segoe UI", Arial, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--teal);
+    font-weight: 700;
+  }
+  h1 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin: 0.2rem 0 0.3rem; color: var(--teal-deep); font-weight: 400; text-wrap: balance; }
+  .dek { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.92rem; color: var(--ink-soft); max-width: 56ch; margin: 0; }
+
+  .reset-btn {
+    background: var(--paper-raised);
+    border: 1px solid var(--stone-line);
+    border-radius: 8px;
+    padding: 0.55rem 1rem;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .reset-btn:hover { color: var(--teal-deep); border-color: var(--teal); }
+
+  .readme {
+    background: var(--mint);
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.86rem;
+    color: var(--teal-deep);
+    margin-bottom: 1.6rem;
+  }
+
+  .tabbar {
+    display: inline-flex;
+    gap: 0.25rem;
+    background: var(--stone-line);
+    padding: 4px;
+    border-radius: 11px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 0.55rem 1.05rem;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .tab-btn.active { background: var(--paper-raised); color: var(--teal-deep); box-shadow: var(--shadow); }
+
+  .panel { display: none; margin-top: 1.8rem; }
+  .panel.active { display: block; }
+  .panel h2 { font-size: 1.2rem; font-weight: 700; color: var(--teal-deep); margin: 0 0 0.2rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .panel .sub { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.88rem; color: var(--ink-soft); margin: 0 0 1.2rem; max-width: 60ch; }
+
+  .card {
+    border: 1px solid var(--stone-line);
+    border-radius: 12px;
+    padding: 1.3rem 1.4rem;
+    background: var(--paper-raised);
+    box-shadow: var(--shadow);
+  }
+  .primary-btn {
+    background: var(--teal);
+    color: var(--on-teal);
+    border: none;
+    border-radius: 9px;
+    padding: 0.7rem 1.2rem;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .primary-btn.ghost { background: transparent; border: 1px solid var(--teal); color: var(--teal-deep); }
+
+  /* --- Vitrine --- */
+  .visitor-box { display: flex; flex-direction: column; gap: 0.5rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .visitor-box .placeholder { color: var(--ink-soft); font-size: 0.92rem; }
+  .visitor-name { font-size: 1.1rem; font-weight: 700; color: var(--teal-deep); }
+  .visitor-cro { font-size: 0.84rem; color: var(--ink-soft); }
+  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; margin-top: 1rem; }
+  .product-btn {
+    border: 1px solid var(--stone-line);
+    border-radius: 10px;
+    padding: 0.7rem 0.85rem;
+    background: var(--paper-raised);
+    cursor: pointer;
+    font-family: "Segoe UI", Arial, sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: left;
+  }
+  .product-btn.favorited { background: var(--mint); border-color: var(--teal); color: var(--teal-deep); }
+  .product-btn:disabled:not(.favorited) { opacity: 0.55; cursor: not-allowed; }
+
+  /* --- Hands-on --- */
+  .bar-outer { background: var(--stone-line); border-radius: 999px; height: 10px; overflow: hidden; margin-top: 0.4rem; }
+  .bar-inner { height: 100%; border-radius: 999px; background: var(--good); }
+  .bar-label { display: flex; justify-content: space-between; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.3rem; }
+  .queue-list { display: flex; flex-direction: column; border-top: 1px solid var(--stone-line); margin-top: 1rem; }
+  .queue-row { display: flex; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid var(--stone-line); font-family: "Segoe UI", Arial, sans-serif; font-size: 0.88rem; }
+  .queue-row .time { font-weight: 700; color: var(--teal-deep); font-variant-numeric: tabular-nums; }
+  .queue-empty { color: var(--ink-soft); font-size: 0.86rem; padding: 0.8rem 0; font-family: "Segoe UI", Arial, sans-serif; }
+  .two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.2rem; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* --- Painel --- */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; }
+  @media (max-width: 700px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+  .stat-tile { border: 1px solid var(--stone-line); border-radius: 10px; padding: 0.9rem 1rem; background: var(--paper-raised); font-family: "Segoe UI", Arial, sans-serif; }
+  .stat-tile .num { font-size: 1.55rem; font-weight: 700; color: var(--teal-deep); font-variant-numeric: tabular-nums; }
+  .stat-tile .lbl { font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.15rem; }
+  .alert-list { margin-top: 0.6rem; display: flex; flex-direction: column; gap: 0.55rem; }
+  .alert-row { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; background: var(--crit-soft); border-radius: 10px; padding: 0.65rem 0.95rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .alert-row .txt { font-size: 0.87rem; color: var(--ink); }
+  .alert-row .time { font-size: 0.72rem; color: var(--ink-soft); margin-left: 0.4rem; }
+  .alert-row button.resolve { background: var(--teal); color: var(--on-teal); border: none; border-radius: 7px; padding: 0.35rem 0.75rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+  .alert-empty { color: var(--ink-soft); font-size: 0.88rem; font-family: "Segoe UI", Arial, sans-serif; padding: 0.4rem 0; }
+
+  /* --- Help FAB --- */
+  .help-fab {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background: var(--teal); color: var(--on-teal);
+    border: none; border-radius: 999px; padding: 0.85rem 1.25rem;
+    font-family: "Segoe UI", Arial, sans-serif; font-weight: 700; font-size: 0.88rem;
+    box-shadow: var(--shadow); cursor: pointer; z-index: 60;
+  }
+  .help-menu {
+    position: fixed; bottom: 5.1rem; right: 1.5rem;
+    background: var(--paper-raised); border: 1px solid var(--stone-line);
+    border-radius: 12px; box-shadow: var(--shadow); padding: 0.5rem;
+    display: none; flex-direction: column; gap: 0.2rem; z-index: 60; min-width: 230px;
+  }
+  .help-menu.open { display: flex; }
+  .help-menu .lbl { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 700; padding: 0.4rem 0.6rem 0.2rem; }
+  .help-menu button {
+    background: none; border: none; text-align: left; padding: 0.6rem 0.7rem;
+    border-radius: 8px; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.86rem;
+    color: var(--ink); cursor: pointer;
+  }
+  .help-menu button:hover { background: var(--mint); }
+
+  .toast {
+    position: fixed; top: 1.2rem; right: 1.2rem;
+    background: var(--teal-deep); color: #fff;
+    padding: 0.7rem 1.1rem; border-radius: 10px;
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 0.86rem;
+    opacity: 0; transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none; z-index: 70;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  footer.foot {
+    margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--stone-line);
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 0.78rem; color: var(--ink-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <span class="eyebrow">Simulador clicável · Biodinâmica</span>
+      <h1>Piloto do sistema do estande — CIOSP 2027</h1>
+      <p class="dek">Dados fictícios, só para demonstração. Use as abas abaixo como se fosse a vitrine, o hands-on e a palestra — e veja tudo chegar ao vivo no Painel da Coordenação.</p>
+    </div>
+    <button class="reset-btn" id="resetBtn" type="button">↺ Reiniciar simulação</button>
+  </header>
+
+  <div class="readme">
+    <b>Como usar na reunião:</b> clique em "Vitrine", leia um crachá, favorite um produto. Depois vá em "Hands-on" e reserve um horário. Depois em "Palestra" e faça um check-in. Por fim, abra "Painel da Coordenação" — os números vão refletir exatamente o que você acabou de fazer.
+  </div>
+
+  <div class="tabbar" role="tablist">
+    <button class="tab-btn active" data-tab="vitrine" type="button">Vitrine</button>
+    <button class="tab-btn" data-tab="handson" type="button">Hands-on</button>
+    <button class="tab-btn" data-tab="palestra" type="button">Palestra</button>
+    <button class="tab-btn" data-tab="painel" type="button">Painel da Coordenação</button>
+  </div>
+
+  <!-- VITRINE -->
+  <section class="panel active" id="panel-vitrine">
+    <h2>Vitrine — leitura de crachá</h2>
+    <p class="sub">Simula o visitante apontando a câmera do celular para o QR do próprio crachá, na entrada da vitrine.</p>
+    <div class="card">
+      <button class="primary-btn" id="scanBtn" type="button">📷 Simular leitura de crachá</button>
+      <div class="visitor-box" id="visitorBox" style="margin-top:1.1rem;">
+        <div class="placeholder">Nenhum crachá lido ainda nesta simulação.</div>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- HANDS-ON -->
+  <section class="panel" id="panel-handson">
+    <h2>Hands-on — Bancada 2 · Restauração Estética</h2>
+    <p class="sub">Simula o visitante reservando um horário pelo QR na entrada da bancada.</p>
+    <div class="two-col">
+      <div class="card">
+        <button class="primary-btn" id="bookBtn" type="button">🪑 Reservar próximo horário</button>
+        <div class="queue-list" id="queueList"></div>
+      </div>
+      <div class="card">
+        <div class="sans" style="font-weight:700; font-size:0.92rem; color:var(--ink);">Estoque da bancada — Resina composta</div>
+        <div class="bar-outer"><div class="bar-inner" id="stockBar" style="width:100%;"></div></div>
+        <div class="bar-label"><span id="stockLabel">100% disponível</span><span>Cada reserva consome material</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PALESTRA -->
+  <section class="panel" id="panel-palestra">
+    <h2>Palestra — Cimentação Adesiva na Prática</h2>
+    <p class="sub">Simula o check-in por QR na entrada da sala, às 14h30.</p>
+    <div class="card">
+      <button class="primary-btn" id="checkinBtn" type="button">✅ Registrar check-in</button>
+      <div class="bar-outer" style="margin-top:1.1rem;"><div class="bar-inner" id="palestraBar" style="width:0%; background: var(--teal);"></div></div>
+      <div class="bar-label"><span id="palestraLabel">0 / 80 lugares ocupados</span><span id="palestraStatus">Vagas disponíveis</span></div>
+    </div>
+  </section>
+
+  <!-- PAINEL -->
+  <section class="panel" id="panel-painel">
+    <h2>Painel da Coordenação</h2>
+    <p class="sub">O que a coordenadora do estande veria no próprio celular, em tempo real, olhando as três áreas ao mesmo tempo.</p>
+    <div class="stat-grid">
+      <div class="stat-tile"><div class="num" id="statVisitantes">0</div><div class="lbl">Crachás lidos hoje</div></div>
+      <div class="stat-tile"><div class="num" id="statHandson">0/8</div><div class="lbl">Vagas do hands-on preenchidas</div></div>
+      <div class="stat-tile"><div class="num" id="statPalestra">0/80</div><div class="lbl">Check-ins na palestra</div></div>
+      <div class="stat-tile"><div class="num" id="statContatos">0</div><div class="lbl">Contatos com interesse captado</div></div>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <div class="sans" style="font-weight:700; font-size:0.95rem; color:var(--ink); margin-bottom:0.3rem;">Alertas do estande</div>
+      <div class="alert-list" id="alertList"></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    Simulação apenas ilustrativa, com nomes e números fictícios. 27–30/01/2027 · 44º CIOSP · Expo Center Norte, SP.
+  </footer>
+</div>
+
+<button class="help-fab" id="helpFab" type="button">🆘 Preciso de ajuda</button>
+<div class="help-menu" id="helpMenu">
+  <div class="lbl">O que está acontecendo?</div>
+  <button data-reason="Falta material na bancada" type="button">Falta material</button>
+  <button data-reason="Fila grande, precisa de reforço" type="button">Fila grande</button>
+  <button data-reason="Outro problema no estande" type="button">Outro problema</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var NAMES = [
+    { name: "Dra. Fernanda Souza", cro: "CRO-SP 45213" },
+    { name: "Dr. Marcos Lima", cro: "CRO-SP 38820" },
+    { name: "Dra. Juliana Prado", cro: "CRO-RJ 19042" },
+    { name: "Dr. Ricardo Alves", cro: "CRO-MG 27715" },
+    { name: "Dra. Camila Rocha", cro: "CRO-SP 51190" },
+    { name: "Dr. Eduardo Nunes", cro: "CRO-PR 33067" },
+    { name: "Dra. Patrícia Gomes", cro: "CRO-SP 40288" },
+    { name: "Dr. Bruno Castro", cro: "CRO-BA 22954" }
+  ];
+  var PRODUCTS = ["Ionofast", "Bioplic", "Retraflex", "Master Fill", "Orthoprotect"];
+
+  function freshState() {
+    return {
+      nameIndex: 0,
+      visitorsScanned: 0,
+      currentVisitor: null,
+      currentFavorites: {},
+      contactsWithInterest: 0,
+      queue: [],
+      queueCapacity: 8,
+      stock: 100,
+      palestraCapacity: 80,
+      palestraCheckins: 0,
+      alerts: [],
+      alertSeq: 0
+    };
+  }
+  var state = freshState();
+
+  function $(id) { return document.getElementById(id); }
+  function nowLabel() {
+    var d = new Date();
+    var h = String(d.getHours()).padStart(2, "0");
+    var m = String(d.getMinutes()).padStart(2, "0");
+    return h + "h" + m;
+  }
+
+  function pushAlert(text, category) {
+    state.alertSeq++;
+    state.alerts.unshift({ id: state.alertSeq, text: text, category: category, time: nowLabel() });
+  }
+
+  function showToast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(function () { t.classList.remove("show"); }, 1900);
+  }
+
+  /* ---------- Tabs ---------- */
+  document.querySelectorAll(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
+      document.querySelectorAll(".panel").forEach(function (p) { p.classList.remove("active"); });
+      btn.classList.add("active");
+      $("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ---------- Vitrine ---------- */
+  function renderVisitor() {
+    var box = $("visitorBox");
+    var grid = $("productGrid");
+    if (!state.currentVisitor) {
+      box.innerHTML = '<div class="placeholder">Nenhum crachá lido ainda nesta simulação.</div>';
+      grid.innerHTML = "";
+      return;
+    }
+    box.innerHTML =
+      '<div class="visitor-name">' + state.currentVisitor.name + "</div>" +
+      '<div class="visitor-cro">' + state.currentVisitor.cro + " · crachá lido " + nowLabel() + "</div>";
+    grid.innerHTML = "";
+    PRODUCTS.forEach(function (p) {
+      var fav = !!state.currentFavorites[p];
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "product-btn" + (fav ? " favorited" : "");
+      b.textContent = (fav ? "✓ " : "☆ ") + p;
+      b.addEventListener("click", function () {
+        if (state.currentFavorites[p]) return;
+        state.currentFavorites[p] = true;
+        if (Object.keys(state.currentFavorites).length === 1) state.contactsWithInterest++;
+        renderVisitor();
+        renderPainel();
+      });
+      grid.appendChild(b);
+    });
+  }
+
+  $("scanBtn").addEventListener("click", function () {
+    var v = NAMES[state.nameIndex % NAMES.length];
+    state.nameIndex++;
+    state.visitorsScanned++;
+    state.currentVisitor = v;
+    state.currentFavorites = {};
+    renderVisitor();
+    renderPainel();
+  });
+
+  /* ---------- Hands-on ---------- */
+  function renderHandson() {
+    var list = $("queueList");
+    if (state.queue.length === 0) {
+      list.innerHTML = '<div class="queue-empty">Nenhuma vaga reservada ainda.</div>';
+    } else {
+      list.innerHTML = "";
+      state.queue.forEach(function (row) {
+        var d = document.createElement("div");
+        d.className = "queue-row";
+        d.innerHTML = '<span class="time">' + row.time + "</span><span>" + row.name + "</span>";
+        list.appendChild(d);
+      });
+    }
+    var full = state.queue.length >= state.queueCapacity;
+    $("bookBtn").disabled = full;
+    $("bookBtn").textContent = full ? "Bancada lotada por hoje" : "🪑 Reservar próximo horário";
+
+    var pct = Math.max(0, state.stock);
+    var bar = $("stockBar");
+    bar.style.width = pct + "%";
+    bar.style.background = pct <= 20 ? "var(--crit)" : (pct <= 45 ? "var(--warn)" : "var(--good)");
+    $("stockLabel").textContent = pct + "% disponível";
+  }
+
+  $("bookBtn").addEventListener("click", function () {
+    if (state.queue.length >= state.queueCapacity) return;
+    var v = NAMES[state.nameIndex % NAMES.length];
+    state.nameIndex++;
+    var startHour = 9, startMin = 40, stepMin = 20;
+    var totalMin = startHour * 60 + startMin + state.queue.length * stepMin;
+    var h = Math.floor(totalMin / 60), m = totalMin % 60;
+    var time = String(h).padStart(2, "0") + "h" + String(m).padStart(2, "0");
+    state.queue.push({ time: time, name: v.name });
+    state.stock = Math.max(0, state.stock - 12);
+    if (state.stock <= 20 && !state.alerts.some(function (a) { return a.category === "estoque"; })) {
+      pushAlert("Estoque de resina baixo na Bancada 2 — repor antes que falte", "estoque");
+    }
+    renderHandson();
+    renderPainel();
+  });
+
+  /* ---------- Palestra ---------- */
+  function renderPalestra() {
+    var pct = Math.round((state.palestraCheckins / state.palestraCapacity) * 100);
+    $("palestraBar").style.width = pct + "%";
+    $("palestraLabel").textContent = state.palestraCheckins + " / " + state.palestraCapacity + " lugares ocupados";
+    var full = state.palestraCheckins >= state.palestraCapacity;
+    $("palestraStatus").textContent = full ? "Sala lotada" : (state.palestraCapacity - state.palestraCheckins) + " vagas disponíveis";
+    $("checkinBtn").disabled = full;
+    $("checkinBtn").textContent = full ? "Sala lotada" : "✅ Registrar check-in";
+  }
+
+  $("checkinBtn").addEventListener("click", function () {
+    if (state.palestraCheckins >= state.palestraCapacity) return;
+    state.palestraCheckins++;
+    renderPalestra();
+    renderPainel();
+  });
+
+  /* ---------- Painel ---------- */
+  function renderPainel() {
+    $("statVisitantes").textContent = state.visitorsScanned;
+    $("statHandson").textContent = state.queue.length + "/" + state.queueCapacity;
+    $("statPalestra").textContent = state.palestraCheckins + "/" + state.palestraCapacity;
+    $("statContatos").textContent = state.contactsWithInterest;
+
+    var list = $("alertList");
+    if (state.alerts.length === 0) {
+      list.innerHTML = '<div class="alert-empty">Nenhum alerta no momento — tudo tranquilo no estande.</div>';
+      return;
+    }
+    list.innerHTML = "";
+    state.alerts.forEach(function (a) {
+      var row = document.createElement("div");
+      row.className = "alert-row";
+      row.innerHTML =
+        '<span class="txt">' + a.text + '<span class="time">· ' + a.time + "</span></span>" +
+        '<button class="resolve" type="button">Resolver</button>';
+      row.querySelector(".resolve").addEventListener("click", function () {
+        if (a.category === "estoque") state.stock = 100;
+        state.alerts = state.alerts.filter(function (x) { return x.id !== a.id; });
+        renderPainel();
+        renderHandson();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  /* ---------- Help FAB ---------- */
+  $("helpFab").addEventListener("click", function () {
+    $("helpMenu").classList.toggle("open");
+  });
+  $("helpMenu").querySelectorAll("button[data-reason]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      pushAlert(b.dataset.reason, "ajuda");
+      $("helpMenu").classList.remove("open");
+      showToast("Enviado para a coordenação ✓");
+      renderPainel();
+    });
+  });
+  document.addEventListener("click", function (e) {
+    if (!$("helpMenu").contains(e.target) && e.target !== $("helpFab")) {
+      $("helpMenu").classList.remove("open");
+    }
+  });
+
+  /* ---------- Reset ---------- */
+  $("resetBtn").addEventListener("click", function () {
+    state = freshState();
+    renderVisitor();
+    renderHandson();
+    renderPalestra();
+    renderPainel();
+    showToast("Simulação reiniciada");
+  });
+
+  /* ---------- Boot ---------- */
+  renderVisitor();
+  renderHandson();
+  renderPalestra();
+  renderPainel();
+})();
+</script>

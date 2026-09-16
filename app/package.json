@@ -1,0 +1,16 @@
+{
+  "name": "biodinamica-ciosp2027",
+  "private": true,
+  "version": "0.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:inscricao": "npm run dev -w @biodinamica/inscricao",
+    "dev:sistema": "npm run dev -w @biodinamica/sistema",
+    "build:inscricao": "npm run build -w @biodinamica/inscricao",
+    "build:sistema": "npm run build -w @biodinamica/sistema",
+    "build": "npm run build:inscricao && npm run build:sistema"
+  }
+}

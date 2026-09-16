@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@import "@biodinamica/ui/theme.css";
+@source "../../../packages/ui/src";
+
+html, body, #root {
+  height: 100%;
+}

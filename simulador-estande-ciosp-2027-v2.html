@@ -1,0 +1,693 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador — Estande Biodinâmica CIOSP 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --linen: #f7f5ec; --surface: #ffffff; --ink: #23301a; --ink-soft: #5b6350;
+    --moss: #4c5a28; --moss-deep: #33401a; --moss-on: #ffffff;
+    --sage: #7d8a5c; --sage-tint: #e4e6d4;
+    --clay: #b3611f; --clay-tint: #f3e3cf;
+    --brick: #a33d33; --brick-tint: #f4e1de;
+    --line: #e2decb;
+    --shadow: 0 1px 2px rgba(35,48,26,0.07), 0 10px 26px -14px rgba(35,48,26,0.24);
+    --shadow-lift: 0 4px 10px rgba(35,48,26,0.10), 0 20px 40px -18px rgba(35,48,26,0.3);
+    --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-full: 999px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --linen: #11150c; --surface: #1a2012; --ink: #edf1e4; --ink-soft: #aab29a;
+      --moss: #9fb56c; --moss-deep: #d9e4c6; --moss-on: #16200a;
+      --sage: #b7bd94; --sage-tint: #29331e;
+      --clay: #e2a15c; --clay-tint: #2c2314;
+      --brick: #e28c82; --brick-tint: #32201c;
+      --line: #2a331d;
+      --shadow: 0 1px 2px rgba(0,0,0,0.35), 0 10px 26px -14px rgba(0,0,0,0.55);
+      --shadow-lift: 0 4px 10px rgba(0,0,0,0.35), 0 20px 40px -18px rgba(0,0,0,0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --linen: #11150c; --surface: #1a2012; --ink: #edf1e4; --ink-soft: #aab29a;
+    --moss: #9fb56c; --moss-deep: #d9e4c6; --moss-on: #16200a;
+    --sage: #b7bd94; --sage-tint: #29331e;
+    --clay: #e2a15c; --clay-tint: #2c2314;
+    --brick: #e28c82; --brick-tint: #32201c;
+    --line: #2a331d;
+  }
+  :root[data-theme="light"] {
+    --linen: #f7f5ec; --surface: #ffffff; --ink: #23301a; --ink-soft: #5b6350;
+    --moss: #4c5a28; --moss-deep: #33401a; --moss-on: #ffffff;
+    --sage: #7d8a5c; --sage-tint: #e4e6d4;
+    --clay: #b3611f; --clay-tint: #f3e3cf;
+    --brick: #a33d33; --brick-tint: #f4e1de;
+    --line: #e2decb;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--linen); color: var(--ink);
+    font-family: "Montserrat", "Segoe UI", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .shell { max-width: 460px; margin: 0 auto; min-height: 100vh; position: relative; }
+  @media (min-width: 760px) { .shell { max-width: 720px; } }
+
+  /* ---------- App bar ---------- */
+  .appbar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+    padding: 0.9rem 1.1rem 0.8rem;
+    background: color-mix(in srgb, var(--linen) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 0.65rem; min-width: 0; }
+  .brand-mark {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+    background: var(--moss); color: var(--moss-on);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.82rem; letter-spacing: -0.02em;
+  }
+  .brand-txt { min-width: 0; }
+  .eyebrow {
+    display: block; text-transform: uppercase; letter-spacing: 0.1em;
+    font-size: 0.6rem; font-weight: 700; color: var(--sage);
+  }
+  .appbar h1 { margin: 0.1rem 0 0; font-size: 1.02rem; font-weight: 800; color: var(--moss-deep); letter-spacing: -0.01em; }
+  .icon-btn {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: var(--r-full);
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .icon-btn svg { width: 17px; height: 17px; }
+  .icon-btn:hover { color: var(--moss-deep); border-color: var(--sage); }
+
+  /* ---------- Tip banner ---------- */
+  .tip {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    margin: 0.9rem 1.1rem 0; padding: 0.75rem 0.85rem;
+    background: var(--sage-tint); border-radius: var(--r-md);
+    font-size: 0.78rem; line-height: 1.45; color: var(--moss-deep);
+  }
+  .tip svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 0.15rem; color: var(--moss); }
+  .tip button { margin-left: auto; flex-shrink: 0; background: none; border: none; color: var(--moss); cursor: pointer; padding: 0; }
+  .tip button svg { width: 14px; height: 14px; margin: 0; }
+  .tip.hidden { display: none; }
+
+  /* ---------- Main / screens ---------- */
+  main { padding: 1.1rem 1.1rem calc(6.4rem + env(safe-area-inset-bottom)); }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fade-in .18s ease; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .screen-head { margin-bottom: 0.9rem; }
+  .screen-head h2 { margin: 0 0 0.2rem; font-size: 1.12rem; font-weight: 800; color: var(--moss-deep); }
+  .screen-head p { margin: 0; font-size: 0.82rem; color: var(--ink-soft); max-width: 52ch; }
+
+  .card {
+    border: 1px solid var(--line); border-radius: var(--r-lg);
+    padding: 1.1rem; background: var(--surface); box-shadow: var(--shadow);
+  }
+  .card + .card { margin-top: 0.8rem; }
+  .card-label { display: flex; align-items: center; gap: 0.4rem; font-weight: 700; font-size: 0.85rem; color: var(--ink); margin-bottom: 0.6rem; }
+  .card-label svg { width: 15px; height: 15px; color: var(--sage); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    width: 100%; border: none; border-radius: var(--r-md);
+    padding: 0.85rem 1.1rem; font-weight: 700; font-size: 0.92rem;
+    cursor: pointer; transition: opacity .15s ease, transform .1s ease;
+  }
+  .btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--moss); color: var(--moss-on); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink-soft); }
+  .btn-outline:hover { border-color: var(--sage); color: var(--moss-deep); }
+
+  /* ---------- Badge / pills ---------- */
+  .pill { display: inline-flex; align-items: center; font-size: 0.68rem; font-weight: 700; padding: 0.22rem 0.65rem; border-radius: var(--r-full); white-space: nowrap; }
+  .pill-ok { background: var(--sage-tint); color: var(--moss-deep); }
+  .pill-wait { background: var(--clay-tint); color: var(--clay); }
+  .pill-crit { background: var(--brick-tint); color: var(--brick); }
+
+  /* ---------- Vitrine ---------- */
+  .visitor-empty { font-size: 0.88rem; color: var(--ink-soft); text-align: center; padding: 0.6rem 0; }
+  .visitor-id { display: flex; align-items: center; gap: 0.7rem; }
+  .visitor-avatar {
+    width: 42px; height: 42px; border-radius: var(--r-full); flex-shrink: 0;
+    background: var(--sage-tint); color: var(--moss-deep);
+    display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem;
+  }
+  .visitor-name { font-weight: 700; font-size: 1rem; color: var(--moss-deep); }
+  .visitor-cro { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.1rem; }
+  .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin-top: 1rem; }
+  @media (min-width: 480px) { .product-grid { grid-template-columns: repeat(3, 1fr); } }
+  .product-btn {
+    border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 0.65rem 0.75rem; background: var(--surface); cursor: pointer;
+    font-size: 0.82rem; font-weight: 600; color: var(--ink); text-align: left;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .product-btn svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--ink-soft); }
+  .product-btn.favorited { background: var(--sage-tint); border-color: var(--sage); color: var(--moss-deep); }
+  .product-btn.favorited svg { color: var(--moss); }
+  .product-btn:disabled:not(.favorited) { opacity: 0.55; cursor: not-allowed; }
+
+  /* ---------- Hands-on ---------- */
+  .stack-md { display: flex; flex-direction: column; gap: 0.8rem; }
+  @media (min-width: 700px) { .stack-md { display: grid; grid-template-columns: 1.05fr 1fr; align-items: start; gap: 0.9rem; } }
+  .bar-outer { background: var(--line); border-radius: var(--r-full); height: 9px; overflow: hidden; margin-top: 0.5rem; }
+  .bar-inner { height: 100%; border-radius: var(--r-full); background: var(--moss); transition: width .3s ease, background .3s ease; }
+  .bar-label { display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.35rem; }
+  .queue-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); margin-top: 1rem; }
+  .queue-row { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-size: 0.85rem; }
+  .queue-row .time { font-weight: 700; color: var(--moss-deep); flex-shrink: 0; }
+  .queue-empty { color: var(--ink-soft); font-size: 0.84rem; padding: 0.8rem 0; }
+
+  /* ---------- Palestra ---------- */
+  .capacity-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 1.1rem; }
+  .capacity-row .big { font-size: 1.4rem; font-weight: 800; color: var(--moss-deep); }
+
+  /* ---------- Painel ---------- */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+  @media (min-width: 700px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+  .stat-tile { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 0.9rem 1rem; background: var(--surface); }
+  .stat-tile .stat-num { font-size: 1.5rem; font-weight: 800; color: var(--moss-deep); }
+  .stat-tile .stat-lbl { font-size: 0.72rem; color: var(--ink-soft); margin-top: 0.3rem; display: flex; align-items: center; }
+  .live-dot { position: relative; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--moss); margin-right: 0.4rem; flex-shrink: 0; }
+  .live-dot::after {
+    content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1.5px solid var(--moss);
+    animation: live-ping 2s ease-out infinite;
+  }
+  @keyframes live-ping { 0% { transform: scale(0.5); opacity: 0.9; } 100% { transform: scale(2.2); opacity: 0; } }
+
+  .alert-list { margin-top: 0.7rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .alert-row {
+    display: flex; align-items: center; gap: 0.7rem;
+    background: var(--brick-tint); border-radius: var(--r-md); padding: 0.65rem 0.8rem;
+    border-left: 3px solid var(--brick);
+  }
+  .alert-row svg.icon { width: 16px; height: 16px; color: var(--brick); flex-shrink: 0; }
+  .alert-row .txt { font-size: 0.83rem; color: var(--ink); flex: 1; }
+  .alert-row .txt .time { font-size: 0.7rem; color: var(--ink-soft); margin-left: 0.35rem; }
+  .alert-row .resolve {
+    background: var(--surface); color: var(--moss-deep); border: 1px solid var(--line);
+    border-radius: var(--r-sm); padding: 0.32rem 0.65rem; font-size: 0.74rem; font-weight: 700; cursor: pointer; flex-shrink: 0;
+  }
+  .alert-empty { display: flex; align-items: center; gap: 0.5rem; color: var(--ink-soft); font-size: 0.84rem; padding: 0.3rem 0; }
+  .alert-empty svg { width: 15px; height: 15px; color: var(--sage); }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; justify-content: center;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar-inner { width: 100%; max-width: 460px; display: flex; }
+  @media (min-width: 760px) { .tabbar-inner { max-width: 720px; } }
+  .tab-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.22rem;
+    background: none; border: none; padding: 0.55rem 0.2rem 0.5rem; cursor: pointer;
+    color: var(--ink-soft); min-height: 56px;
+  }
+  .tab-btn svg { width: 21px; height: 21px; }
+  .tab-btn span { font-size: 0.65rem; font-weight: 700; }
+  .tab-btn.active { color: var(--moss); }
+
+  /* ---------- Help FAB ---------- */
+  .help-fab {
+    position: fixed; right: 1.1rem; bottom: calc(5.3rem + env(safe-area-inset-bottom)); z-index: 55;
+    display: flex; align-items: center; gap: 0.5rem;
+    background: var(--moss); color: var(--moss-on); border: none; border-radius: var(--r-full);
+    padding: 0.8rem 1.1rem; font-weight: 700; font-size: 0.84rem; box-shadow: var(--shadow-lift); cursor: pointer;
+  }
+  .help-fab svg { width: 17px; height: 17px; }
+  .help-fab.pulse { animation: fab-pulse 1.8s ease-in-out infinite; }
+  @keyframes fab-pulse { 0%, 100% { box-shadow: var(--shadow-lift), 0 0 0 0 rgba(179,97,31,0.45); } 50% { box-shadow: var(--shadow-lift), 0 0 0 8px rgba(179,97,31,0); } }
+
+  /* ---------- Sheet ---------- */
+  .sheet-backdrop {
+    position: fixed; inset: 0; background: rgba(20,26,12,0.4); z-index: 59;
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+  }
+  .sheet-backdrop.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0 auto; max-width: 460px;
+    background: var(--surface); border-radius: 18px 18px 0 0; box-shadow: var(--shadow-lift);
+    padding: 0.6rem 1.1rem calc(1.3rem + env(safe-area-inset-bottom));
+    transform: translateY(100%); transition: transform .25s cubic-bezier(.32,.72,0,1);
+  }
+  @media (min-width: 760px) { .sheet { max-width: 720px; } }
+  .sheet.open { transform: translateY(0); }
+  .sheet-handle { width: 36px; height: 4px; border-radius: var(--r-full); background: var(--line); margin: 0.3rem auto 0.9rem; }
+  .sheet-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .sheet-head h3 { margin: 0; font-size: 0.95rem; font-weight: 800; color: var(--moss-deep); }
+  .sheet-body { display: flex; flex-direction: column; gap: 0.4rem; }
+  .sheet-option {
+    display: flex; align-items: center; gap: 0.75rem; text-align: left;
+    background: var(--linen); border: 1px solid var(--line); border-radius: var(--r-md);
+    padding: 0.75rem 0.85rem; cursor: pointer;
+  }
+  .sheet-option:hover { border-color: var(--sage); }
+  .sheet-option svg { width: 18px; height: 18px; color: var(--moss); flex-shrink: 0; }
+  .sheet-option b { display: block; font-size: 0.85rem; color: var(--ink); }
+  .sheet-option span { display: block; font-size: 0.74rem; color: var(--ink-soft); margin-top: 0.05rem; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: fixed; left: 50%; top: calc(4.5rem + env(safe-area-inset-top)); z-index: 70;
+    transform: translate(-50%, -8px); background: var(--moss-deep); color: #fff;
+    padding: 0.65rem 1.05rem; border-radius: var(--r-full); font-size: 0.8rem; font-weight: 600;
+    display: flex; align-items: center; gap: 0.45rem; box-shadow: var(--shadow-lift);
+    max-width: calc(100% - 2.2rem); text-align: center;
+    opacity: 0; transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+  }
+  .toast svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .screen.active, .toast, .sheet, .sheet-backdrop { animation: none !important; transition: none !important; }
+    .live-dot::after, .help-fab.pulse { animation: none !important; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="appbar">
+    <div class="brand">
+      <span class="brand-mark">bio</span>
+      <div class="brand-txt">
+        <span class="eyebrow">Simulador · CIOSP 2027</span>
+        <h1 id="screenTitle">Vitrine</h1>
+      </div>
+    </div>
+    <button class="icon-btn" id="resetBtn" type="button" aria-label="Reiniciar simulação">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 21v-5h5"/></svg>
+    </button>
+  </header>
+
+  <div class="tip" id="tip">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg>
+    <div><b>Como usar na reunião:</b> leia um crachá na Vitrine e favorite um produto. Depois reserve um horário no Hands-on e faça check-in na Palestra. Abra o Painel — os números refletem exatamente o que você fez.</div>
+    <button id="tipClose" type="button" aria-label="Fechar dica">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <main>
+
+    <!-- VITRINE -->
+    <section class="screen active" id="screen-vitrine">
+      <div class="screen-head">
+        <h2>Leitura de crachá</h2>
+        <p>Simula o visitante apontando a câmera do celular para o QR do próprio crachá, na entrada da vitrine.</p>
+      </div>
+      <div class="card">
+        <button class="btn btn-primary" id="scanBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M4 12h16" stroke-dasharray="2.2 3.2"/></svg>
+          Simular leitura de crachá
+        </button>
+        <div id="visitorBox" style="margin-top:1.1rem;">
+          <div class="visitor-empty">Nenhum crachá lido ainda nesta simulação.</div>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+      </div>
+    </section>
+
+    <!-- HANDS-ON -->
+    <section class="screen" id="screen-handson">
+      <div class="screen-head">
+        <h2>Bancada 2 · Restauração Estética</h2>
+        <p>Simula o visitante reservando um horário pelo QR na entrada da bancada.</p>
+      </div>
+      <div class="stack-md">
+        <div class="card">
+          <button class="btn btn-primary" id="bookBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+            Reservar próximo horário
+          </button>
+          <div class="queue-list" id="queueList"></div>
+        </div>
+        <div class="card">
+          <div class="card-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5 12 3 3 8.5v7L12 21l9-5.5Z"/><path d="M3 8.5 12 14l9-5.5"/><path d="M12 14v7"/></svg>
+            Estoque · Resina composta
+          </div>
+          <div class="bar-outer"><div class="bar-inner" id="stockBar" style="width:100%;"></div></div>
+          <div class="bar-label"><span id="stockLabel">100% disponível</span><span>Cada reserva consome material</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PALESTRA -->
+    <section class="screen" id="screen-palestra">
+      <div class="screen-head">
+        <h2>Cimentação Adesiva na Prática</h2>
+        <p>Simula o check-in por QR na entrada da sala, às 14h30.</p>
+      </div>
+      <div class="card">
+        <button class="btn btn-primary" id="checkinBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.2 12.3l2.5 2.5 5-5.2"/></svg>
+          Registrar check-in
+        </button>
+        <div class="bar-outer" style="margin-top:1.1rem;"><div class="bar-inner" id="palestraBar" style="width:0%;"></div></div>
+        <div class="capacity-row">
+          <span class="big num" id="palestraLabel">0 / 80</span>
+          <span class="pill pill-ok" id="palestraStatus">vagas disponíveis</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINEL -->
+    <section class="screen" id="screen-painel">
+      <div class="screen-head">
+        <h2>Painel da Coordenação</h2>
+        <p>O que a coordenadora veria no próprio celular, em tempo real, olhando as três áreas ao mesmo tempo.</p>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="stat-num num" id="statVisitantes">0</div><div class="stat-lbl"><span class="live-dot"></span>Crachás lidos hoje</div></div>
+        <div class="stat-tile"><div class="stat-num num" id="statHandson">0/8</div><div class="stat-lbl">Vagas do hands-on</div></div>
+        <div class="stat-tile"><div class="stat-num num" id="statPalestra">0/80</div><div class="stat-lbl">Check-ins na palestra</div></div>
+        <div class="stat-tile"><div class="stat-num num" id="statContatos">0</div><div class="stat-lbl">Contatos com interesse</div></div>
+      </div>
+      <div class="card" style="margin-top:0.8rem;">
+        <div class="card-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 3.9 2.9 18a1.7 1.7 0 0 0 1.5 2.5h15.2a1.7 1.7 0 0 0 1.5-2.5L13.4 3.9a1.7 1.7 0 0 0-2.8 0Z"/><path d="M12 9.5v4"/><path d="M12 16.7h.01"/></svg>
+          Alertas do estande
+        </div>
+        <div class="alert-list" id="alertList"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar" role="tablist" aria-label="Áreas do estande">
+    <div class="tabbar-inner">
+      <button class="tab-btn active" data-tab="vitrine" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5 5.2 4h13.6l1.2 5.5"/><path d="M4 9.5a2.4 2.4 0 0 0 4.6 1 2.4 2.4 0 0 0 4.6 0 2.4 2.4 0 0 0 4.6 0 2.4 2.4 0 0 0 4.6-1"/><path d="M5 10.5V20h14v-9.5"/><path d="M9.5 20v-5.5h5V20"/></svg>
+        <span>Vitrine</span>
+      </button>
+      <button class="tab-btn" data-tab="handson" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 3h5"/><path d="M10.2 3v6.2L5.6 17a2 2 0 0 0 1.7 3h9.4a2 2 0 0 0 1.7-3l-4.6-7.8V3"/><path d="M8 14.5h8"/></svg>
+        <span>Hands-on</span>
+      </button>
+      <button class="tab-btn" data-tab="palestra" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0"/><path d="M12 17.5V21"/><path d="M8.5 21h7"/></svg>
+        <span>Palestra</span>
+      </button>
+      <button class="tab-btn" data-tab="painel" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M12 20V4"/><path d="M20 20v-7"/><path d="M2.5 20h19"/></svg>
+        <span>Painel</span>
+      </button>
+    </div>
+  </nav>
+
+  <button class="help-fab" id="helpFab" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.3"/><path d="M6.4 6.4l2.9 2.9M17.6 6.4l-2.9 2.9M6.4 17.6l2.9-2.9M17.6 17.6l-2.9-2.9"/></svg>
+    Ajuda
+  </button>
+
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="helpSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-handle"></div>
+  <div class="sheet-head">
+    <h3 id="sheetTitle">O que está acontecendo?</h3>
+    <button class="icon-btn" id="sheetClose" type="button" aria-label="Fechar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <button class="sheet-option" data-reason="Falta material na bancada" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5 12 3 3 8.5v7L12 21l9-5.5Z"/><path d="M3 8.5 12 14l9-5.5"/><path d="M12 14v7"/></svg>
+      <div><b>Falta material</b><span>Repor estoque na bancada</span></div>
+    </button>
+    <button class="sheet-option" data-reason="Fila grande, precisa de reforço" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3.3 2.5-5.8 5.5-5.8s5.5 2.5 5.5 5.8"/><circle cx="17" cy="9.5" r="2.4"/><path d="M15.5 13.9c1.9.5 3.3 2.4 3.3 4.6"/></svg>
+      <div><b>Fila grande</b><span>Precisa de reforço na área</span></div>
+    </button>
+    <button class="sheet-option" data-reason="Outro problema no estande" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 3.9 2.9 18a1.7 1.7 0 0 0 1.5 2.5h15.2a1.7 1.7 0 0 0 1.5-2.5L13.4 3.9a1.7 1.7 0 0 0-2.8 0Z"/><path d="M12 9.5v4"/><path d="M12 16.7h.01"/></svg>
+      <div><b>Outro problema</b><span>Avisar a coordenação agora</span></div>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  var NAMES = [
+    { name: "Dra. Fernanda Souza", cro: "CRO-SP 45213" },
+    { name: "Dr. Marcos Lima", cro: "CRO-SP 38820" },
+    { name: "Dra. Juliana Prado", cro: "CRO-RJ 19042" },
+    { name: "Dr. Ricardo Alves", cro: "CRO-MG 27715" },
+    { name: "Dra. Camila Rocha", cro: "CRO-SP 51190" },
+    { name: "Dr. Eduardo Nunes", cro: "CRO-PR 33067" },
+    { name: "Dra. Patrícia Gomes", cro: "CRO-SP 40288" },
+    { name: "Dr. Bruno Castro", cro: "CRO-BA 22954" }
+  ];
+  var PRODUCTS = ["Ionofast", "Bioplic", "Retraflex", "Master Fill", "Orthoprotect"];
+  var TAB_TITLES = { vitrine: "Vitrine", handson: "Hands-on", palestra: "Palestra", painel: "Painel da Coordenação" };
+  var ICON_PACKAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5 12 3 3 8.5v7L12 21l9-5.5Z"/><path d="M3 8.5 12 14l9-5.5"/><path d="M12 14v7"/></svg>';
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.2 12.3l2.5 2.5 5-5.2"/></svg>';
+  var ICON_STAR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.4 5 5.5.7-4 3.8 1 5.5-4.9-2.7-4.9 2.7 1-5.5-4-3.8 5.5-.7Z"/></svg>';
+  var ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="icon"><path d="M10.6 3.9 2.9 18a1.7 1.7 0 0 0 1.5 2.5h15.2a1.7 1.7 0 0 0 1.5-2.5L13.4 3.9a1.7 1.7 0 0 0-2.8 0Z"/><path d="M12 9.5v4"/><path d="M12 16.7h.01"/></svg>';
+
+  function freshState() {
+    return {
+      nameIndex: 0,
+      visitorsScanned: 0,
+      currentVisitor: null,
+      currentFavorites: {},
+      contactsWithInterest: 0,
+      queue: [],
+      queueCapacity: 8,
+      stock: 100,
+      palestraCapacity: 80,
+      palestraCheckins: 0,
+      alerts: [],
+      alertSeq: 0
+    };
+  }
+  var state = freshState();
+
+  function $(id) { return document.getElementById(id); }
+  function nowLabel() {
+    var d = new Date();
+    return String(d.getHours()).padStart(2, "0") + "h" + String(d.getMinutes()).padStart(2, "0");
+  }
+  function initials(name) {
+    var parts = name.replace(/^(Dra?\.)\s*/, "").split(" ");
+    return ((parts[0] || "")[0] || "") + ((parts[1] || "")[0] || "");
+  }
+
+  function pushAlert(text, category) {
+    state.alertSeq++;
+    state.alerts.unshift({ id: state.alertSeq, text: text, category: category, time: nowLabel() });
+  }
+
+  function showToast(msg) {
+    $("tip").classList.add("hidden");
+    var t = $("toast");
+    t.innerHTML = ICON_CHECK + "<span>" + msg + "</span>";
+    t.classList.add("show");
+    clearTimeout(showToast._h);
+    showToast._h = setTimeout(function () { t.classList.remove("show"); }, 2000);
+  }
+
+  /* ---------- Tabs ---------- */
+  document.querySelectorAll(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
+      document.querySelectorAll(".screen").forEach(function (p) { p.classList.remove("active"); });
+      btn.classList.add("active");
+      $("screen-" + btn.dataset.tab).classList.add("active");
+      $("screenTitle").textContent = TAB_TITLES[btn.dataset.tab];
+    });
+  });
+
+  /* ---------- Tip ---------- */
+  $("tipClose").addEventListener("click", function () { $("tip").classList.add("hidden"); });
+
+  /* ---------- Vitrine ---------- */
+  function renderVisitor() {
+    var box = $("visitorBox");
+    var grid = $("productGrid");
+    if (!state.currentVisitor) {
+      box.innerHTML = '<div class="visitor-empty">Nenhum crachá lido ainda nesta simulação.</div>';
+      grid.innerHTML = "";
+      return;
+    }
+    box.innerHTML =
+      '<div class="visitor-id"><div class="visitor-avatar">' + initials(state.currentVisitor.name) + '</div><div>' +
+      '<div class="visitor-name">' + state.currentVisitor.name + "</div>" +
+      '<div class="visitor-cro">' + state.currentVisitor.cro + " · lido " + nowLabel() + "</div></div></div>";
+    grid.innerHTML = "";
+    PRODUCTS.forEach(function (p) {
+      var fav = !!state.currentFavorites[p];
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "product-btn" + (fav ? " favorited" : "");
+      b.innerHTML = ICON_STAR + "<span>" + p + "</span>";
+      b.addEventListener("click", function () {
+        if (state.currentFavorites[p]) return;
+        state.currentFavorites[p] = true;
+        if (Object.keys(state.currentFavorites).length === 1) state.contactsWithInterest++;
+        renderVisitor();
+        renderPainel();
+      });
+      grid.appendChild(b);
+    });
+  }
+
+  $("scanBtn").addEventListener("click", function () {
+    var v = NAMES[state.nameIndex % NAMES.length];
+    state.nameIndex++;
+    state.visitorsScanned++;
+    state.currentVisitor = v;
+    state.currentFavorites = {};
+    renderVisitor();
+    renderPainel();
+    showToast("Crachá lido");
+  });
+
+  /* ---------- Hands-on ---------- */
+  function renderHandson() {
+    var list = $("queueList");
+    if (state.queue.length === 0) {
+      list.innerHTML = '<div class="queue-empty">Nenhuma vaga reservada ainda.</div>';
+    } else {
+      list.innerHTML = "";
+      state.queue.forEach(function (row) {
+        var d = document.createElement("div");
+        d.className = "queue-row";
+        d.innerHTML = '<span class="time num">' + row.time + "</span><span>" + row.name + "</span>";
+        list.appendChild(d);
+      });
+    }
+    var full = state.queue.length >= state.queueCapacity;
+    $("bookBtn").disabled = full;
+    $("bookBtn").querySelector("svg").nextSibling.textContent = full ? " Bancada lotada por hoje" : " Reservar próximo horário";
+
+    var pct = Math.max(0, state.stock);
+    var bar = $("stockBar");
+    bar.style.width = pct + "%";
+    bar.style.background = pct <= 20 ? "var(--brick)" : (pct <= 45 ? "var(--clay)" : "var(--moss)");
+    $("stockLabel").textContent = pct + "% disponível";
+  }
+
+  $("bookBtn").addEventListener("click", function () {
+    if (state.queue.length >= state.queueCapacity) return;
+    var v = NAMES[state.nameIndex % NAMES.length];
+    state.nameIndex++;
+    var startHour = 9, startMin = 40, stepMin = 20;
+    var totalMin = startHour * 60 + startMin + state.queue.length * stepMin;
+    var h = Math.floor(totalMin / 60), m = totalMin % 60;
+    var time = String(h).padStart(2, "0") + "h" + String(m).padStart(2, "0");
+    state.queue.push({ time: time, name: v.name });
+    state.stock = Math.max(0, state.stock - 12);
+    if (state.stock <= 20 && !state.alerts.some(function (a) { return a.category === "estoque"; })) {
+      pushAlert("Estoque de resina baixo na Bancada 2 — repor antes que falte", "estoque");
+    }
+    renderHandson();
+    renderPainel();
+    showToast("Horário reservado · " + time);
+  });
+
+  /* ---------- Palestra ---------- */
+  function renderPalestra() {
+    var pct = Math.round((state.palestraCheckins / state.palestraCapacity) * 100);
+    $("palestraBar").style.width = pct + "%";
+    $("palestraLabel").textContent = state.palestraCheckins + " / " + state.palestraCapacity;
+    var full = state.palestraCheckins >= state.palestraCapacity;
+    var statusEl = $("palestraStatus");
+    statusEl.textContent = full ? "sala lotada" : (state.palestraCapacity - state.palestraCheckins) + " vagas livres";
+    statusEl.className = "pill " + (full ? "pill-crit" : (pct >= 75 ? "pill-wait" : "pill-ok"));
+    $("checkinBtn").disabled = full;
+    $("checkinBtn").querySelector("svg").nextSibling.textContent = full ? " Sala lotada" : " Registrar check-in";
+  }
+
+  $("checkinBtn").addEventListener("click", function () {
+    if (state.palestraCheckins >= state.palestraCapacity) return;
+    state.palestraCheckins++;
+    renderPalestra();
+    renderPainel();
+    showToast("Check-in registrado");
+  });
+
+  /* ---------- Painel ---------- */
+  function renderPainel() {
+    $("statVisitantes").textContent = state.visitorsScanned;
+    $("statHandson").textContent = state.queue.length + "/" + state.queueCapacity;
+    $("statPalestra").textContent = state.palestraCheckins + "/" + state.palestraCapacity;
+    $("statContatos").textContent = state.contactsWithInterest;
+
+    $("helpFab").classList.toggle("pulse", state.alerts.length > 0);
+
+    var list = $("alertList");
+    if (state.alerts.length === 0) {
+      list.innerHTML = '<div class="alert-empty">' + ICON_CHECK + '<span>Nenhum alerta no momento — tudo tranquilo no estande.</span></div>';
+      return;
+    }
+    list.innerHTML = "";
+    state.alerts.forEach(function (a) {
+      var row = document.createElement("div");
+      row.className = "alert-row";
+      row.innerHTML =
+        ICON_ALERT +
+        '<span class="txt">' + a.text + '<span class="time">· ' + a.time + "</span></span>" +
+        '<button class="resolve" type="button">Resolver</button>';
+      row.querySelector(".resolve").addEventListener("click", function () {
+        if (a.category === "estoque") state.stock = 100;
+        state.alerts = state.alerts.filter(function (x) { return x.id !== a.id; });
+        renderPainel();
+        renderHandson();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  /* ---------- Help sheet ---------- */
+  function openSheet() { $("helpSheet").classList.add("open"); $("sheetBackdrop").classList.add("open"); }
+  function closeSheet() { $("helpSheet").classList.remove("open"); $("sheetBackdrop").classList.remove("open"); }
+  $("helpFab").addEventListener("click", openSheet);
+  $("sheetClose").addEventListener("click", closeSheet);
+  $("sheetBackdrop").addEventListener("click", closeSheet);
+  document.querySelectorAll(".sheet-option").forEach(function (b) {
+    b.addEventListener("click", function () {
+      pushAlert(b.dataset.reason, "ajuda");
+      closeSheet();
+      showToast("Enviado para a coordenação");
+      renderPainel();
+    });
+  });
+
+  /* ---------- Reset ---------- */
+  $("resetBtn").addEventListener("click", function () {
+    state = freshState();
+    renderVisitor();
+    renderHandson();
+    renderPalestra();
+    renderPainel();
+    showToast("Simulação reiniciada");
+  });
+
+  /* ---------- Boot ---------- */
+  renderVisitor();
+  renderHandson();
+  renderPalestra();
+  renderPainel();
+})();
+</script>

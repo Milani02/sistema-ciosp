@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Estande Inteligente — Biodinâmica no CIOSP 2027</title>
+<style>
+  :root {
+    --paper: #ffffff;
+    --paper-raised: #ffffff;
+    --ink: #16241f;
+    --ink-soft: #4b5850;
+    --teal: #0b4f45;
+    --teal-deep: #082e28;
+    --on-teal: #ffffff;
+    --mint: #dfece5;
+    --amber: #b96a1f;
+    --amber-soft: #f2e2cd;
+    --stone: #d8d2c0;
+    --stone-line: #dcd6c6;
+    --good: #2f7d4f;
+    --good-soft: #e3efe4;
+    --warn: #b96a1f;
+    --crit: #a83a3a;
+    --crit-soft: #f3e4e1;
+    --shadow: 0 1px 2px rgba(22,36,31,0.06), 0 4px 10px -6px rgba(22,36,31,0.18);
+  }
+
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    line-height: 1.5;
+  }
+  .sans { font-family: "Segoe UI", Corbel, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--teal); }
+
+  .wrap { max-width: 100%; margin: 0 auto; padding: 0; }
+
+  header.top { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1.4rem; }
+  .eyebrow { font-family: "Segoe UI", Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.68rem; color: var(--teal); font-weight: 600; }
+  h1 { font-size: 1.9rem; margin: 0; color: var(--teal-deep); font-weight: 400; letter-spacing: -0.01em; }
+  .dek { font-size: 0.95rem; color: var(--ink-soft); max-width: 66ch; }
+
+  .factstrip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--stone-line); border: 1px solid var(--stone-line); border-radius: 8px; overflow: hidden; font-family: "Segoe UI", Arial, sans-serif; }
+  .fact { background: var(--paper-raised); padding: 0.6rem 0.8rem; }
+  .fact .num { font-size: 1rem; font-weight: 700; color: var(--teal-deep); font-variant-numeric: tabular-nums; }
+  .fact .lbl { font-size: 0.66rem; color: var(--ink-soft); margin-top: 0.1rem; }
+
+  .readme { margin-top: 1.2rem; background: var(--mint); border-radius: 8px; padding: 0.8rem 1rem; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.82rem; color: var(--teal-deep); }
+  .readme b { font-weight: 700; }
+
+  nav.toc { margin-top: 1.4rem; border: 1px solid var(--stone-line); border-radius: 8px; padding: 0.8rem 1.1rem; background: var(--paper-raised); page-break-inside: avoid; }
+  nav.toc .lbl { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-soft); font-weight: 700; margin-bottom: 0.4rem; }
+  nav.toc ol { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.8rem; margin: 0; padding-left: 1.1rem; columns: 2; column-gap: 2rem; }
+  nav.toc li { margin-bottom: 0.3rem; }
+  nav.toc a { text-decoration: none; color: var(--ink); }
+
+  section { margin-top: 1.8rem; page-break-inside: auto; }
+  h2 { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--amber); font-weight: 700; margin: 0 0 0.3rem; }
+  h3.section-title { font-size: 1.25rem; color: var(--teal-deep); font-weight: 400; margin: 0 0 0.6rem; }
+  p { max-width: 68ch; }
+  p.lede { font-size: 0.9rem; color: var(--ink-soft); max-width: 68ch; }
+
+  .compare-wrap { margin-top: 1rem; }
+  table.compare { width: 100%; border-collapse: collapse; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.8rem; }
+  table.compare th { text-align: left; font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); padding: 0 0.7rem 0.4rem; font-weight: 700; }
+  table.compare th:first-child { padding-left: 0; }
+  table.compare td { padding: 0.5rem 0.7rem; border-top: 1px solid var(--stone-line); vertical-align: top; }
+  table.compare td:first-child { padding-left: 0; font-weight: 600; color: var(--ink); width: 22%; }
+  table.compare .bad, table.compare .ok { border-radius: 6px; padding: 0.45rem 0.6rem; display: block; }
+  table.compare .bad { background: var(--crit-soft); color: var(--ink); }
+  table.compare .ok { background: var(--good-soft); color: var(--ink); }
+  table.compare .mark { font-weight: 700; margin-right: 0.3rem; }
+  table.compare .bad .mark { color: var(--crit); }
+  table.compare .ok .mark { color: var(--good); }
+
+  .zones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.7rem; margin-top: 1rem; }
+  .zone { background: var(--paper-raised); border: 1px solid var(--stone-line); border-radius: 8px; padding: 0.85rem 0.9rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.5rem; page-break-inside: avoid; }
+  .zone .tag { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: var(--teal); background: var(--mint); display: inline-block; padding: 0.15rem 0.45rem; border-radius: 999px; width: fit-content; }
+  .zone h4 { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.92rem; margin: 0; color: var(--ink); font-weight: 700; }
+  .zone ul { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.78rem; color: var(--ink-soft); padding-left: 1rem; margin: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+  .zone li::marker { color: var(--amber); }
+  .zone li b { color: var(--ink); font-weight: 600; }
+
+  .feature-list { display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--stone-line); margin-top: 1rem; }
+  .feature { display: grid; grid-template-columns: 190px 1fr; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--stone-line); align-items: baseline; page-break-inside: avoid; }
+  .feature .name { font-family: "Segoe UI", Arial, sans-serif; font-weight: 700; color: var(--teal-deep); font-size: 0.85rem; }
+  .feature .desc { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.8rem; color: var(--ink-soft); }
+  .feature .desc b { color: var(--ink); }
+
+  .timeline { display: flex; flex-direction: column; margin-top: 1rem; }
+  .tstep { display: grid; grid-template-columns: 90px 18px 1fr; gap: 0; page-break-inside: avoid; }
+  .tstep .when { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.72rem; color: var(--ink-soft); padding-top: 0.1rem; font-weight: 600; }
+  .tstep .rail { display: flex; flex-direction: column; align-items: center; }
+  .tstep .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); margin-top: 0.25rem; flex-shrink: 0; }
+  .tstep .line { width: 1px; flex: 1; background: var(--stone-line); margin-top: 0.15rem; }
+  .tstep:last-child .line { display: none; }
+  .tstep .body { padding-bottom: 1rem; }
+  .tstep .role { display: inline-block; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--amber); background: var(--amber-soft); padding: 0.1rem 0.4rem; border-radius: 999px; margin-bottom: 0.3rem; }
+  .tstep .title { font-family: "Segoe UI", Arial, sans-serif; font-weight: 700; color: var(--ink); margin-bottom: 0.15rem; font-size: 0.85rem; }
+  .tstep .body p { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.78rem; color: var(--ink-soft); margin: 0; max-width: 60ch; }
+
+  .diagram-box { background: var(--paper-raised); border: 1px solid var(--stone-line); border-radius: 8px; padding: 1rem; margin-top: 1rem; box-shadow: var(--shadow); page-break-inside: avoid; }
+  .flow-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 1.6rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .flow-col { display: flex; flex-direction: column; }
+  .flow-box { border: 1px solid var(--stone-line); background: var(--paper); border-radius: 6px; padding: 0.45rem 0.7rem; font-weight: 700; color: var(--teal-deep); font-size: 0.78rem; }
+  .flow-step-arrow { display: flex; align-items: baseline; gap: 0.4rem; padding: 0.3rem 0 0.3rem 0.9rem; font-size: 0.66rem; color: var(--ink-soft); }
+  .flow-step-arrow .ar { color: var(--amber); font-size: 0.9rem; line-height: 1; }
+
+  .phone-row { display: flex; gap: 0.9rem; flex-wrap: wrap; margin-top: 1.1rem; }
+  .phone-item { width: 150px; flex-shrink: 0; page-break-inside: avoid; }
+  .phone { border: 1px solid var(--stone-line); border-radius: 16px; background: var(--paper-raised); box-shadow: var(--shadow); padding: 6px; }
+  .phone .notch { width: 34px; height: 4px; border-radius: 3px; background: var(--stone-line); margin: 0 auto 5px; }
+  .phone .screen { background: var(--paper); border-radius: 10px; padding: 0.6rem 0.55rem; min-height: 175px; display: flex; flex-direction: column; gap: 0.4rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .phone .screen .bar { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-soft); font-weight: 700; }
+  .phone .screen .big { font-size: 0.68rem; font-weight: 700; color: var(--ink); }
+  .phone .screen .line { font-size: 0.58rem; color: var(--ink-soft); }
+  .phone .screen .ok-line { font-size: 0.6rem; color: var(--good); font-weight: 700; }
+  .phone .screen .pill-row { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+  .phone .screen .pill { font-size: 0.5rem; background: var(--mint); color: var(--teal-deep); padding: 0.1rem 0.35rem; border-radius: 999px; font-weight: 600; }
+  .phone .screen .row { display: flex; justify-content: space-between; font-size: 0.58rem; padding: 0.25rem 0; border-top: 1px solid var(--stone-line); }
+  .phone .screen .row:first-of-type { border-top: none; }
+  .phone .screen .stat { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--ink); }
+  .phone .screen .alert { font-size: 0.54rem; background: var(--crit-soft); color: var(--crit); padding: 0.3rem 0.4rem; border-radius: 5px; font-weight: 600; }
+  .phone .screen .btn { margin-top: auto; background: var(--teal); color: var(--on-teal); text-align: center; padding: 0.4rem; border-radius: 6px; font-size: 0.58rem; font-weight: 700; }
+  .phone-caption { text-align: center; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.6rem; color: var(--ink-soft); margin-top: 0.4rem; max-width: 150px; }
+
+  .prio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-top: 1rem; }
+  .prio-card { border: 1px solid var(--stone-line); border-radius: 8px; padding: 0.8rem 0.9rem; background: var(--paper-raised); page-break-inside: avoid; }
+  .prio-card .head { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem; font-family: "Segoe UI", Arial, sans-serif; }
+  .chip { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 999px; }
+  .chip.mvp { background: var(--mint); color: var(--teal-deep); }
+  .chip.full { background: var(--amber-soft); color: var(--amber); }
+  .prio-card h4 { margin: 0; font-family: "Segoe UI", Arial, sans-serif; font-size: 0.85rem; }
+  .prio-card ul { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.76rem; color: var(--ink-soft); padding-left: 1rem; margin: 0; display: flex; flex-direction: column; gap: 0.3rem; }
+
+  .faq { margin-top: 1rem; border-top: 1px solid var(--stone-line); }
+  .faq details { border-bottom: 1px solid var(--stone-line); padding: 0.7rem 0; page-break-inside: avoid; }
+  .faq summary { font-family: "Segoe UI", Arial, sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--ink); list-style: none; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq .a { font-family: "Segoe UI", Arial, sans-serif; font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.4rem; max-width: 66ch; }
+
+  .steps-grid { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1rem; }
+  .step-row { display: grid; grid-template-columns: 26px 1fr; gap: 0.7rem; align-items: flex-start; page-break-inside: avoid; }
+  .step-row .n { width: 26px; height: 26px; border-radius: 50%; background: var(--teal); color: var(--on-teal); display: flex; align-items: center; justify-content: center; font-family: "Segoe UI", Arial, sans-serif; font-weight: 700; font-size: 0.78rem; flex-shrink: 0; }
+  .step-row .t { font-family: "Segoe UI", Arial, sans-serif; padding-top: 0.2rem; font-size: 0.82rem; }
+  .step-row .t b { color: var(--ink); }
+  .step-row .t span { color: var(--ink-soft); }
+
+  footer { margin-top: 2rem; padding-top: 0.8rem; border-top: 1px solid var(--stone-line); font-family: "Segoe UI", Arial, sans-serif; font-size: 0.68rem; color: var(--ink-soft); }
+
+  @page { size: A4; margin: 14mm; }
+  h1, h3.section-title, nav.toc, .diagram-box { page-break-after: avoid; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span class="eyebrow">Proposta de sistema · Biodinâmica</span>
+    <h1>Um sistema para o estande, não só para o evento</h1>
+    <p class="dek sans">Como organizar a vitrine, o hands‑on e a palestra da Biodinâmica no CIOSP 2027 — e, principalmente, tirar peso das costas de quem vai estar lá quatro dias em pé. Nenhuma parte exige conhecimento técnico: é apontar a câmera do celular e tocar na tela, como ler o QR code de um cardápio.</p>
+
+    <div class="factstrip">
+      <div class="fact"><div class="num">27–30 jan</div><div class="lbl">44º CIOSP · 2027</div></div>
+      <div class="fact"><div class="num">5 pavilhões</div><div class="lbl">Expo Center Norte, SP</div></div>
+      <div class="fact"><div class="num">70 mil+</div><div class="lbl">congressistas (ed. 2025)</div></div>
+      <div class="fact"><div class="num">~5 meses</div><div class="lbl">de hoje até a abertura</div></div>
+    </div>
+
+    <div class="readme">
+      <b>Como ler este documento:</b> não tem nada para vocês instalarem ou configurarem. Cada seção explica uma parte do sistema em português simples, com desenhos de como a tela apareceria no celular de quem está no estande. No fim tem uma seção de perguntas frequentes respondendo as dúvidas mais comuns de quem nunca usou algo assim.
+    </div>
+
+    <nav class="toc">
+      <div class="lbl">Neste documento</div>
+      <ol>
+        <li><a href="#porque">Por que vale a pena mudar</a></li>
+        <li><a href="#areas">As três áreas do estande</a></li>
+        <li><a href="#dia">Um dia no estande, passo a passo</a></li>
+        <li><a href="#telas">As telas do celular</a></li>
+        <li><a href="#fluxo">Como as peças se conectam</a></li>
+        <li><a href="#depois">Depois que a feira acaba</a></li>
+        <li><a href="#faq">Perguntas frequentes</a></li>
+        <li><a href="#mvp">Por onde começar</a></li>
+        <li><a href="#proximos">Próximos passos</a></li>
+      </ol>
+    </nav>
+  </header>
+
+  <section id="porque">
+    <h2 class="sans">Por que vale a pena mudar</h2>
+    <h3 class="section-title">O que muda no dia a dia do estande</h3>
+    <p class="lede sans">A Biodinâmica expõe no CIOSP desde 2000 e leva um catálogo grande — restauradores, ionômero de vidro, endodontia, clareadores, cirurgia, ortodontia, descartáveis. Hoje, cada frente do estande provavelmente roda "no olho": papel, planilha, grupo de WhatsApp da equipe, cartão de visita guardado no bolso. Isso funciona, mas cobra um preço de quem está lá em pé. A tabela abaixo compara como cada situação costuma acontecer hoje com como ficaria com o sistema.</p>
+
+    <div class="compare-wrap">
+      <table class="compare">
+        <thead><tr><th>Situação</th><th>Hoje, sem sistema</th><th>Com o sistema</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Cadastro do visitante</td>
+            <td><span class="bad"><span class="mark">✕</span>Cartão de visita ou ficha de papel, preenchida à mão em cada uma das 3 áreas do estande.</span></td>
+            <td><span class="ok"><span class="mark">✓</span>Um scan do crachá na primeira parada já identifica o visitante nas outras duas áreas.</span></td>
+          </tr>
+          <tr>
+            <td>Fila do hands-on</td>
+            <td><span class="bad"><span class="mark">✕</span>Gente amontoada esperando, sem saber quanto falta ou se ainda tem vaga.</span></td>
+            <td><span class="ok"><span class="mark">✓</span>Visitante reserva o horário pelo celular e chega na hora certa.</span></td>
+          </tr>
+          <tr>
+            <td>Lotação da palestra</td>
+            <td><span class="bad"><span class="mark">✕</span>Ninguém sabe se vai sobrar ou faltar cadeira até a sala encher.</span></td>
+            <td><span class="ok"><span class="mark">✓</span>Contagem de lugares em tempo real, visível pra quem está na porta.</span></td>
+          </tr>
+          <tr>
+            <td>Falta de material na bancada</td>
+            <td><span class="bad"><span class="mark">✕</span>Alguém precisa sair andando pelo pavilhão procurando quem resolve.</span></td>
+            <td><span class="ok"><span class="mark">✓</span>Um toque no celular já avisa a coordenação, na hora.</span></td>
+          </tr>
+          <tr>
+            <td>Contato depois da feira</td>
+            <td><span class="bad"><span class="mark">✕</span>Pilha de cartões de visita pra digitar depois — muitos acabam esquecidos.</span></td>
+            <td><span class="ok"><span class="mark">✓</span>Contato e interesse de cada visitante já chegam prontos pro time comercial.</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="areas">
+    <h2 class="sans">As três áreas do estande</h2>
+    <h3 class="section-title">O que o sistema faz em cada uma</h3>
+    <div class="zones">
+      <div class="zone">
+        <span class="tag">Vitrine</span>
+        <h4>Catálogo vivo</h4>
+        <ul>
+          <li><b>Tela por categoria</b> — Restauração, Ortodontia, Endodontia etc., com busca, ficha técnica e um vídeo curto de uso.</li>
+          <li><b>QR em cada produto físico</b> — o visitante aponta a câmera do próprio celular e recebe a ficha técnica no aparelho dele, sem precisar levar papel.</li>
+          <li><b>"Favoritar" produto</b> — o visitante marca o que interessou; isso já entra como sinal de interesse no perfil dele.</li>
+        </ul>
+      </div>
+      <div class="zone">
+        <span class="tag">Hands-on</span>
+        <h4>Fila e bancada sem caos</h4>
+        <ul>
+          <li><b>Agenda por vaga</b> — o visitante escolhe um horário lendo o QR na entrada da bancada; o time vê a fila do dia sem gente amontoada esperando.</li>
+          <li><b>Checklist de bancada</b> — cada sessão já lista os materiais necessários; ao concluir, um toque desconta do estoque daquele kit sozinho.</li>
+          <li><b>Roteiro no tablet do instrutor</b> — passo a passo da técnica, pra quem reveza na bancada não depender de "quem sabe fazer aquela demonstração".</li>
+        </ul>
+      </div>
+      <div class="zone">
+        <span class="tag">Palestra</span>
+        <h4>Lotação e presença sob controle</h4>
+        <ul>
+          <li><b>Check-in por QR na entrada</b> — mostra em tempo real quantos lugares restam, evita superlotar ou ficar com cadeira vazia.</li>
+          <li><b>Certificado automático</b> — quem faz check-in recebe o certificado por e-mail assim que a palestra termina, sem fila na saída.</li>
+          <li><b>Grade do dia num painel</b> — próximas palestras e horários visíveis pra quem passa, sem depender de alguém "ficar gritando" o horário.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="dia">
+    <h2 class="sans">Na prática</h2>
+    <h3 class="section-title">Um dia no estande, passo a passo</h3>
+    <p class="lede sans">Para tirar isso do abstrato, veja como seria a quarta-feira do CIOSP — segundo dia de feira, o mais movimentado — com quatro pessoas da equipe: <b>Ana</b> (coordenadora do estande), <b>Carlos</b> (vitrine e vendas), <b>Beatriz</b> (instrutora do hands-on) e <b>Rafael</b> (recepção da palestra).</p>
+    <div class="timeline">
+      <div class="tstep"><div class="when sans">8h20</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Ana · coordenadora</span><div class="title sans">Abertura do dia</div><p>Antes de abrir, Ana confere no celular a escala do dia: quem está na vitrine, quem reveza no hands-on, quem cobre a palestra da tarde. Todo mundo já sabe seu horário sem precisar perguntar.</p></div></div>
+      <div class="tstep"><div class="when sans">9h05</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Carlos · vitrine</span><div class="title sans">Primeiro visitante do dia</div><p>Uma dentista se interessa pelo Ionofast. Carlos lê o crachá dela com o próprio celular — nome, CRO e contato já ficam registrados, sem ficha de papel. Ela mesma toca em "favoritar" o produto na tela.</p></div></div>
+      <div class="tstep"><div class="when sans">9h40</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Beatriz · hands-on</span><div class="title sans">Fila da bancada organizada</div><p>A mesma dentista já reservou horário no hands-on de restauração estética pelo QR da bancada. Beatriz vê a fila do dia no tablet e sabe exatamente quem chega a cada horário — sem gente amontoada esperando.</p></div></div>
+      <div class="tstep"><div class="when sans">10h15</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Beatriz · hands-on</span><div class="title sans">Aviso de material acabando</div><p>A resina de uma das bancadas está acabando. Beatriz aperta "preciso de ajuda" no celular e escolhe "falta material" — o alerta já cai direto pro celular de Ana, sem sair procurando ninguém no pavilhão.</p></div></div>
+      <div class="tstep"><div class="when sans">10h20</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Ana · coordenadora</span><div class="title sans">Reposição antes de faltar de verdade</div><p>Ana vê o alerta, confirma no próprio celular que tem reposição no estoque de apoio e manda alguém levar até a bancada — resolvido em minutos, sem interromper a demonstração em andamento.</p></div></div>
+      <div class="tstep"><div class="when sans">11h00</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Rafael · palestra</span><div class="title sans">Sala enchendo</div><p>Rafael acompanha o número de lugares restantes na tela na entrada da palestra. Quando chega a 5 vagas, ele já avisa quem está chegando — ninguém fica na dúvida se vai conseguir entrar ou não.</p></div></div>
+      <div class="tstep"><div class="when sans">13h00</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><span class="role">Ana · coordenadora</span><div class="title sans">Ajuste no horário de almoço</div><p>No painel geral, Ana vê que a vitrine está com fluxo alto de visitantes nesse horário. Ela decide segurar mais uma pessoa na vitrine e mandar o almoço da equipe do hands-on 30 minutos depois — decisão tomada olhando números reais, não "achismo".</p></div></div>
+      <div class="tstep"><div class="when sans">17h50</div><div class="rail"><div class="dot"></div></div><div class="body"><span class="role">Ana · coordenadora</span><div class="title sans">Fechamento do dia</div><p>Antes de ir embora, Ana confere o resumo do dia direto no celular: quantas pessoas passaram pela vitrine, quantas vagas do hands-on foram preenchidas, quantos check-ins na palestra. Nenhuma planilha para montar à noite.</p></div></div>
+    </div>
+  </section>
+
+  <section id="telas">
+    <h2 class="sans">Para visualizar</h2>
+    <h3 class="section-title">As telas do celular, uma por uma</h3>
+    <p class="lede sans">Abaixo, um desenho de como cada tela apareceria — sempre no navegador do próprio celular de quem está usando, sem instalar nada. Os textos são só exemplos, para dar a ideia de como fica na prática.</p>
+    <div class="phone-row">
+      <div class="phone-item">
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="bar">Leitura de crachá</div>
+          <div class="ok-line">✓ Crachá lido</div>
+          <div class="big">Dra. Fernanda Souza</div>
+          <div class="line">CRO-SP · Endodontia</div>
+          <div class="pill-row"><span class="pill">Ionofast</span><span class="pill">Retraflex</span></div>
+          <div class="btn">Favoritar produto</div>
+        </div></div>
+        <div class="phone-caption">Vitrine — Carlos aponta a câmera pro crachá, sistema já reconhece a visitante.</div>
+      </div>
+      <div class="phone-item">
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="bar">Bancada 2 · restauração estética</div>
+          <div class="big">Fila de hoje</div>
+          <div class="row"><span>09h40</span><span class="stat">Dra. Fernanda</span></div>
+          <div class="row"><span>10h00</span><span class="stat">Dr. Marcos</span></div>
+          <div class="row"><span>10h20</span><span class="stat">— livre —</span></div>
+          <div class="btn">Reservar horário</div>
+        </div></div>
+        <div class="phone-caption">Hands-on — visitante escolhe o horário; Beatriz vê a fila inteira do dia.</div>
+      </div>
+      <div class="phone-item">
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="bar">Cimentação adesiva na prática</div>
+          <div class="big">58 / 80 lugares</div>
+          <div class="line">Início às 14h30</div>
+          <div class="ok-line">✓ Check-in confirmado</div>
+          <div class="btn">Ver próximas palestras</div>
+        </div></div>
+        <div class="phone-caption">Palestra — Rafael acompanha lotação; visitante recebe certificado por e-mail no fim.</div>
+      </div>
+      <div class="phone-item">
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="bar">Painel do dia</div>
+          <div class="row"><span>Visitantes na vitrine</span><span class="stat">412</span></div>
+          <div class="row"><span>Vagas do hands-on</span><span class="stat">32/40</span></div>
+          <div class="row"><span>Contatos captados</span><span class="stat">187</span></div>
+          <div class="alert">⚠ Bancada 2: resina acabando</div>
+        </div></div>
+        <div class="phone-caption">Coordenação — Ana vê tudo em uma tela só, com alertas em destaque.</div>
+      </div>
+      <div class="phone-item">
+        <div class="phone"><div class="notch"></div><div class="screen">
+          <div class="bar">Preciso de ajuda</div>
+          <div class="line">O que está acontecendo?</div>
+          <div class="row"><span>Falta material</span><span class="stat">›</span></div>
+          <div class="row"><span>Fila muito grande</span><span class="stat">›</span></div>
+          <div class="row"><span>Outro problema</span><span class="stat">›</span></div>
+          <div class="btn">Enviado ✓</div>
+        </div></div>
+        <div class="phone-caption">Botão de socorro — qualquer pessoa da equipe aciona a coordenação em um toque.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sans">A camada que segura tudo isso</h2>
+    <h3 class="section-title">Resumo do que o time ganha</h3>
+    <p class="lede sans">As telas acima são a ponta visível de seis coisas que o sistema resolve por trás, pensadas direto pra <b>facilitar a vida de quem está lá</b> — vendedor, promotora, instrutor, coordenador — os quatro dias inteiros, revezando turno, sem tempo de abrir planilha.</p>
+    <div class="feature-list">
+      <div class="feature"><div class="name sans">Leitor de crachá único</div><div class="desc sans">O QR do crachá do congressista é lido <b>uma vez</b> e vale pras três áreas. Ninguém pede o mesmo cadastro em pé, três vezes, ao mesmo visitante.</div></div>
+      <div class="feature"><div class="name sans">Escala e turnos</div><div class="desc sans">Quem está na bancada, na recepção da palestra ou circulando na vitrine em cada bloco de horário dos 4 dias — visível pra todo o time no celular, com troca de turno registrada, não combinada de boca.</div></div>
+      <div class="feature"><div class="name sans">Botão de socorro</div><div class="desc sans">"Falta resina na bancada 2" ou "vitrine sem brinde" — um toque manda alerta pra quem cuida do estoque de apoio, em vez de a pessoa sair procurando alguém no meio do pavilhão.</div></div>
+      <div class="feature"><div class="name sans">Estoque de brindes e amostras</div><div class="desc sans">Contagem simples de quanto ainda tem de cada kit, amostra ou brinde, com alerta quando bater um limite baixo — pra repor <b>antes</b> de faltar no dia 3, não descobrir no dia 4.</div></div>
+      <div class="feature"><div class="name sans">Contato direto pro time comercial</div><div class="desc sans">Cada crachá lido, produto favoritado, hands-on feito e palestra assistida vira um perfil de interesse, encaminhado automaticamente pro representante da região do visitante — sem digitar cartão de visita depois do evento.</div></div>
+      <div class="feature"><div class="name sans">Painel do coordenador</div><div class="desc sans">Uma tela só pra quem coordena o estande: fluxo de visitantes por hora, ocupação do hands-on, lotação da palestra, contatos captados no dia — pra ajustar a equipe em tempo real, não só no relatório de depois.</div></div>
+    </div>
+  </section>
+
+  <section id="fluxo">
+    <h2 class="sans">Como as peças se conectam</h2>
+    <h3 class="section-title">O caminho da informação, em uma imagem</h3>
+    <p class="lede sans">Sem termos técnicos: o visitante interage no estande, isso gera um perfil de interesse, e esse perfil chega pronto pro time de vendas cuidar depois. Ao mesmo tempo, a equipe alimenta o mesmo sistema com escala, estoque e pedidos de ajuda, e a coordenação acompanha tudo em um painel.</p>
+    <div class="diagram-box">
+      <div class="flow-cols">
+        <div class="flow-col">
+          <div class="flow-box">Visitante</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span>aponta a câmera pro crachá</div>
+          <div class="flow-box">Sistema do estande</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span>favoritou / fez hands-on / viu palestra</div>
+          <div class="flow-box">Perfil de interesse</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span></div>
+          <div class="flow-box">Time comercial</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span></div>
+          <div class="flow-box">Contato após a feira</div>
+        </div>
+        <div class="flow-col">
+          <div class="flow-box">Equipe do estande</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span>escala, estoque, pedido de ajuda</div>
+          <div class="flow-box">Sistema do estande</div>
+          <div class="flow-step-arrow"><span class="ar">↓</span>fluxo, ocupação, contatos do dia</div>
+          <div class="flow-box">Painel da coordenação</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="depois">
+    <h2 class="sans">Depois que a feira acaba</h2>
+    <h3 class="section-title">O trabalho não termina no desmonte do estande</h3>
+    <div class="timeline">
+      <div class="tstep"><div class="when sans">Dia seguinte</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><div class="title sans">Contatos prontos, sem digitação</div><p>Toda a base captada nos 4 dias já está com o time comercial, separada por produto de interesse e por representante — ninguém senta pra "passar a limpo" pilha de cartão de visita.</p></div></div>
+      <div class="tstep"><div class="when sans">Semana 1</div><div class="rail"><div class="dot"></div><div class="line"></div></div><div class="body"><div class="title sans">Contato automático de agradecimento</div><p>E-mail ou WhatsApp de agradecimento com o material do produto que a pessoa favoritou na vitrine, disparado conforme o interesse de cada um.</p></div></div>
+      <div class="tstep"><div class="when sans">Semana 2</div><div class="rail"><div class="dot"></div></div><div class="body"><div class="title sans">Relatório de resultado do estande</div><p>Quantos contatos por categoria de produto, quantas vagas de hands-on preenchidas, lotação média da palestra — números prontos pra diretoria, direto do mesmo sistema.</p></div></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2 class="sans">Antes de decidir</h2>
+    <h3 class="section-title">Perguntas frequentes</h3>
+    <div class="faq">
+      <details open><summary class="sans">Precisamos entender de tecnologia pra usar isso?</summary><p class="a">Não. Quem consegue usar WhatsApp consegue usar o sistema — é apontar a câmera do celular e tocar na tela. Não precisa saber o que existe "por trás". Um treinamento de 15 a 20 minutos com a equipe, na semana antes da feira, já é suficiente.</p></details>
+      <details open><summary class="sans">Precisamos instalar algum aplicativo?</summary><p class="a">Não. Não tem nada pra baixar de loja de aplicativo. Funciona direto no navegador do próprio celular — o mesmo que abre Instagram ou WhatsApp — abrindo um link ou lendo um QR code.</p></details>
+      <details open><summary class="sans">E se a internet do pavilhão cair ou ficar ruim?</summary><p class="a">O sistema é preparado pra continuar funcionando mesmo com internet fraca: a leitura de crachá e as reservas de horário continuam sendo registradas no celular e se atualizam sozinhas assim que a conexão volta. Ninguém perde informação por causa de wifi ruim do pavilhão.</p></details>
+      <details open><summary class="sans">E se o celular de alguém descarregar ou travar no meio do dia?</summary><p class="a">Como o sistema roda no próprio celular de qualquer pessoa da equipe (não é um aparelho especial), basta outra pessoa continuar no lugar dela pelo celular dela. Nada fica travado em um único aparelho.</p></details>
+      <details open><summary class="sans">Os dados dos visitantes ficam seguros? Isso está dentro da lei?</summary><p class="a">Só é registrado o que o próprio visitante mostra ao deixar ler o crachá (nome, CRO, contato profissional), dentro das regras da LGPD (a lei brasileira de proteção de dados). As informações vão direto pro time comercial da Biodinâmica cuidar — não ficam expostas pra mais ninguém, nem no próprio estande.</p></details>
+      <details open><summary class="sans">Quem vai cuidar do sistema durante os 4 dias de feira?</summary><p class="a">Ninguém da equipe de vendas ou do hands-on precisa "cuidar" do sistema — ele roda sozinho. Só o coordenador acompanha o painel geral, que é só números e alertas, sem nada técnico pra mexer.</p></details>
+      <details open><summary class="sans">Dá tempo de ficar pronto até janeiro de 2027?</summary><p class="a">Sim. Faltam cerca de 5 meses até a abertura. A versão essencial (detalhada na seção "Por onde começar") é enxuta o suficiente pra ser construída e testada com folga, com tempo sobrando pra treinar a equipe antes da feira.</p></details>
+    </div>
+  </section>
+
+  <section id="mvp">
+    <h2 class="sans">Por onde começar</h2>
+    <h3 class="section-title">Versão essencial para janeiro vs. versão completa</h3>
+    <p class="lede sans">Com ~5 meses até a abertura, dá pra escalonar: uma versão enxuta já resolve a maior dor (contatos perdidos e time sem coordenação), e o resto entra depois como refinamento.</p>
+    <div class="prio-grid">
+      <div class="prio-card">
+        <div class="head"><span class="chip mvp">Essencial · pronto pra janeiro</span></div>
+        <h4>O que não pode faltar</h4>
+        <ul><li>Leitura única de crachá (vitrine + hands-on + palestra)</li><li>Agenda de vagas do hands-on</li><li>Check-in e controle de lotação da palestra</li><li>Lista de contatos pronta pro time comercial</li></ul>
+      </div>
+      <div class="prio-card">
+        <div class="head"><span class="chip full">Completa · depois de testar</span></div>
+        <h4>Refinamento</h4>
+        <ul><li>Painel ao vivo da coordenação</li><li>Botão de socorro + estoque de brindes e amostras</li><li>Contato automático de agradecimento pós-feira</li><li>Certificado automático de palestra</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="proximos">
+    <h2 class="sans">Para seguir adiante</h2>
+    <h3 class="section-title">Próximos passos</h3>
+    <div class="steps-grid">
+      <div class="step-row"><div class="n sans">1</div><div class="t"><b>Validar este desenho</b> <span>com quem vai coordenar o estande — ajustar o que faz sentido pra rotina real de vocês.</span></div></div>
+      <div class="step-row"><div class="n sans">2</div><div class="t"><b>Escolher entre versão essencial e completa</b> <span>como ponto de partida, considerando o prazo até janeiro.</span></div></div>
+      <div class="step-row"><div class="n sans">3</div><div class="t"><b>Definir um responsável interno</b> <span>pra alinhar prioridades com quem for construir o sistema.</span></div></div>
+      <div class="step-row"><div class="n sans">4</div><div class="t"><b>Montar o cronograma até janeiro</b> <span>com tempo reservado pra testar antes da feira, não só pra construir.</span></div></div>
+      <div class="step-row"><div class="n sans">5</div><div class="t"><b>Agendar o treinamento da equipe</b> <span>na semana anterior ao CIOSP — 15 a 20 minutos por pessoa é suficiente.</span></div></div>
+    </div>
+  </section>
+
+  <footer class="sans">
+    Contexto usado nesta proposta: 44º CIOSP, 27–30/01/2027, Expo Center Norte (SP) — dados públicos do site oficial ciosp.com.br e da APCD. Portfólio e histórico da Biodinâmica a partir de biodinamica.com.br.
+  </footer>
+
+</div>
+</body>
+</html>
