@@ -23,9 +23,23 @@ export function RequireAccess({
 }) {
   const { profile } = useAuth();
   if (!profile) return null;
+
+  // Login individual de autoatendimento do almoço — não é uma conta de
+  // departamento normal (o department dela só existe pra fins de
+  // organização, tipo "esse aqui é do time comercial"), então ela NUNCA
+  // enxerga nada além de /meu-almoco, mesmo se o department bater com
+  // outra rota. Sem essa checagem, dava pra entrar em /comercial/venda
+  // digitando a URL direto — o menu escondia o link, mas a rota em si
+  // não travava.
+  if (profile.staff_id != null) {
+    if (!requireStaffLink) return <Navigate to={defaultPathFor(profile)} replace />;
+    return <>{children}</>;
+  }
+  if (requireStaffLink) return <Navigate to={defaultPathFor(profile)} replace />;
+
   const departmentOk =
     !department || (Array.isArray(department) ? department.includes(profile.department) : profile.department === department);
-  const allowed = departmentOk && (!adminOnly || profile.level === "admin") && (!requireStaffLink || profile.staff_id != null);
+  const allowed = departmentOk && (!adminOnly || profile.level === "admin");
   if (!allowed) return <Navigate to={defaultPathFor(profile)} replace />;
   return <>{children}</>;
 }
