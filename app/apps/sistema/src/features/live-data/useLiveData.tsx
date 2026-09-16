@@ -6,8 +6,8 @@ import type {
   CashSession,
   Checkin,
   Customer,
+  LunchAttendance,
   LunchQueueEntry,
-  LunchSession,
   Order,
   OrderItem,
   OrderPayment,
@@ -38,7 +38,7 @@ interface LiveData {
   cashSessions: CashSession[];
   cashMovements: CashMovement[];
   lunchQueue: LunchQueueEntry[];
-  lunchSessions: LunchSession[];
+  lunchAttendance: LunchAttendance[];
   /** Aplica a mudança na hora, sem esperar o realtime/poll — usado depois
    *  de um update no banco pra a tela reagir instantaneamente (ex.: Caixa
    *  confirmando pagamento ou marcando entregue). O poll de 5s corrige
@@ -85,10 +85,11 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
   // Cadastro só precisa de customers (nem orders nem products) — pra
   // acompanhar em tempo real quem o Comercial cadastrou na venda.
   const needsCustomers = needsOrdersData || isCadastro;
-  // Almoço é gerido por admin comercial OU admin técnica — staff/fila/
-  // sessão da copa precisam estar disponíveis pros dois lados (o nível
-  // staff/admin é filtrado na própria rota, não aqui).
-  const needsLunch = isTecnica || isComercial;
+  // Almoço: admin comercial/técnica acompanham o dashboard de todo mundo;
+  // login individual de autoatendimento (staff_id setado) precisa dos
+  // mesmos dados só pra ver/mexer no próprio status, seja qual for o
+  // departamento dessa conta.
+  const needsLunch = isTecnica || isComercial || isCaixa || profile?.staff_id != null;
 
   const [connected, setConnected] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +108,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
   const [cashSessions, setCashSessions] = useState<CashSession[]>([]);
   const [cashMovements, setCashMovements] = useState<CashMovement[]>([]);
   const [lunchQueue, setLunchQueue] = useState<LunchQueueEntry[]>([]);
-  const [lunchSessions, setLunchSessions] = useState<LunchSession[]>([]);
+  const [lunchAttendance, setLunchAttendance] = useState<LunchAttendance[]>([]);
 
   useEffect(() => {
     if (!hasProfile) return;
@@ -131,15 +132,15 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
     }
 
     async function loadLunch() {
-      const [st, lq, ls] = await Promise.all([
+      const [st, lq, la] = await Promise.all([
         supabase.from("staff").select("*").order("id"),
         supabase.from("lunch_queue").select("*").order("joined_at"),
-        supabase.from("lunch_sessions").select("*").order("start_time", { ascending: false }),
+        supabase.from("lunch_attendance").select("*").order("started_at", { ascending: false }),
       ]);
       if (cancelled) return;
       setStaff(st.data ?? []);
       setLunchQueue(lq.data ?? []);
-      setLunchSessions(ls.data ?? []);
+      setLunchAttendance(la.data ?? []);
     }
 
     async function loadProducts() {
@@ -244,9 +245,12 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
           .on("postgres_changes", { event: "*", schema: "public", table: "lunch_queue" }, () =>
             refetch<LunchQueueEntry>("lunch_queue", setLunchQueue, "joined_at")
           )
-          .on("postgres_changes", { event: "*", schema: "public", table: "lunch_sessions" }, async () => {
-            const { data } = await supabase.from("lunch_sessions").select("*").order("start_time", { ascending: false });
-            if (!cancelled) setLunchSessions(data ?? []);
+          .on("postgres_changes", { event: "*", schema: "public", table: "lunch_attendance" }, async () => {
+            const { data } = await supabase
+              .from("lunch_attendance")
+              .select("*")
+              .order("started_at", { ascending: false });
+            if (!cancelled) setLunchAttendance(data ?? []);
           });
       }
 
@@ -376,11 +380,11 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
               if (!stopped) setLunchQueue(data ?? []);
             }),
           supabase
-            .from("lunch_sessions")
+            .from("lunch_attendance")
             .select("*")
-            .order("start_time", { ascending: false })
+            .order("started_at", { ascending: false })
             .then(({ data }) => {
-              if (!stopped) setLunchSessions(data ?? []);
+              if (!stopped) setLunchAttendance(data ?? []);
             })
         );
       }
@@ -482,7 +486,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
         cashSessions,
         cashMovements,
         lunchQueue,
-        lunchSessions,
+        lunchAttendance,
         patchOrder,
         patchProduct,
         patchCustomer,

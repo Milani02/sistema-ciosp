@@ -22,7 +22,7 @@ export function useAuth() {
 async function loadProfile(userId: string): Promise<{ profile: Profile | null; failed: boolean }> {
   const { data, error } = await supabase
     .from("profiles")
-    .select("id,name,department,level")
+    .select("id,name,department,level,staff_id")
     .eq("id", userId)
     .maybeSingle();
   return { profile: data as Profile | null, failed: !!error };

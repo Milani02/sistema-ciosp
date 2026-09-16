@@ -28,7 +28,8 @@ function CustomerInfo({ customer }: { customer: Customer | null }) {
     <>
       <div className="truncate text-[0.86rem] font-semibold text-ink">{customer.name}</div>
       <div className="text-[0.76rem] text-ink-soft">
-        {customer.doc_type === "cpf" ? "CPF" : "CNPJ"} {formatCpfCnpj(customer.doc_number)}
+        {customer.doc_type === "cpf" ? "CPF" : customer.doc_type === "cnpj" ? "CNPJ" : "Doc."}{" "}
+        {customer.doc_type === "exterior" ? customer.doc_number : formatCpfCnpj(customer.doc_number)}
       </div>
       {(customer.phone || customer.email) && (
         <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.74rem] text-ink-soft">

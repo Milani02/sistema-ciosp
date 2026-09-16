@@ -37,6 +37,10 @@ function formatBirthDate(value: string) {
   return `${day}/${month}/${year}`;
 }
 
+function formatDoc(docType: string, docNumber: string) {
+  return docType === "exterior" ? docNumber : formatCpfCnpj(docNumber);
+}
+
 function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
@@ -163,7 +167,7 @@ export function CadastrosPage() {
                         <span className="shrink-0 text-[0.72rem] font-semibold text-ink-soft">{formatTime(c.created_at)}</span>
                       </div>
                       <div className="mt-0.5 break-words pl-5 text-[0.78rem] text-ink-soft">
-                        {c.doc_type.toUpperCase()} {formatCpfCnpj(c.doc_number)}
+                        {c.doc_type.toUpperCase()} {formatDoc(c.doc_type, c.doc_number)}
                         {c.phone && ` · ${c.phone}`}
                         {c.email && ` · ${c.email}`}
                       </div>
@@ -180,8 +184,8 @@ export function CadastrosPage() {
                   {expanded && (
                     <div className="ml-5 mt-3 rounded-xl border border-line bg-linen/60 p-3">
                       <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3">
-                        <DetailField label={c.doc_type === "cnpj" ? "Razão social / Nome" : "Nome"} value={c.name} />
-                        <DetailField label={c.doc_type.toUpperCase()} value={formatCpfCnpj(c.doc_number)} />
+                        <DetailField label={c.doc_type !== "cpf" ? "Razão social / Nome" : "Nome"} value={c.name} />
+                        <DetailField label={c.doc_type.toUpperCase()} value={formatDoc(c.doc_type, c.doc_number)} />
                         {c.doc_type === "cnpj" && c.cnpj_razao_social && (
                           <DetailField label="Razão social" value={c.cnpj_razao_social} />
                         )}

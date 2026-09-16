@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { Badge, Button, Card, FieldLabel, Input, cn, showToast } from "@biodinamica/ui";
+import { Lock } from "lucide-react";
 import type { Activity, Session } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { fmtDT } from "../../lib/format";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-interface OpenSession extends Session {
+interface ListedSession extends Session {
   filled: number;
   full: boolean;
+  locked: boolean;
+  ended: boolean;
 }
 
 export function RegistrationForm({
@@ -33,7 +36,7 @@ export function RegistrationForm({
   const [submitting, setSubmitting] = useState(false);
 
   const needsSessionPick = activity === "handson" && sessionId === undefined;
-  const [handsonSessions, setHandsonSessions] = useState<OpenSession[]>([]);
+  const [handsonSessions, setHandsonSessions] = useState<ListedSession[]>([]);
   const [chosenSessionId, setChosenSessionId] = useState("");
   const [loadingSessions, setLoadingSessions] = useState(needsSessionPick);
 
@@ -48,20 +51,17 @@ export function RegistrationForm({
         supabase.from("checkins").select("session_id,status"),
       ]);
       if (cancelled) return;
-      const open = (sess ?? [])
-        .filter((s) => {
+      const all = (sess ?? [])
+        .map((s) => {
           const t = new Date(s.session_time);
           const opensAt = new Date(t.getTime() - 60 * 60000);
-          return now >= opensAt && now <= t;
-        })
-        .map((s) => {
           const filled = (checkins ?? []).filter(
             (c) => c.session_id === s.id && (c.status === "confirmed" || c.status === "checked_in")
           ).length;
-          return { ...s, filled, full: filled >= s.capacity };
+          return { ...s, filled, full: filled >= s.capacity, locked: now < opensAt, ended: now > t };
         })
         .sort((a, b) => new Date(a.session_time).getTime() - new Date(b.session_time).getTime());
-      setHandsonSessions(open);
+      setHandsonSessions(all);
       setLoadingSessions(false);
     }
     load();
@@ -136,30 +136,41 @@ export function RegistrationForm({
           {loadingSessions ? (
             <p className="py-2 text-sm text-ink-soft">Carregando hands-on disponíveis...</p>
           ) : handsonSessions.length === 0 ? (
-            <p className="py-2 text-sm text-ink-soft">
-              Nenhum hands-on com inscrição aberta agora. A inscrição abre 1h antes do início de cada sessão.
-            </p>
+            <p className="py-2 text-sm text-ink-soft">Nenhum hands-on cadastrado ainda.</p>
           ) : (
             <div className="flex flex-col gap-2.5">
               {handsonSessions.map((s) => {
                 const selected = chosenSessionId === String(s.id);
+                const disabled = s.locked || s.ended;
                 return (
                   <button
                     key={s.id}
                     type="button"
+                    disabled={disabled}
                     onClick={() => setChosenSessionId(String(s.id))}
                     className={cn(
-                      "flex w-full items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-colors",
-                      selected ? "border-moss bg-sage-tint" : "border-line bg-surface hover:border-sage"
+                      "flex w-full items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60",
+                      selected ? "border-moss bg-sage-tint" : "border-line bg-surface hover:border-sage disabled:hover:border-line"
                     )}
                   >
                     <div>
-                      <div className="text-[0.92rem] font-bold text-ink">{s.title}</div>
+                      <div className="flex items-center gap-1.5 text-[0.92rem] font-bold text-ink">
+                        {s.locked && <Lock className="h-3.5 w-3.5 shrink-0 text-ink-soft" />}
+                        {s.title}
+                      </div>
                       <div className="text-[0.78rem] text-ink-soft">
-                        {fmtDT(s.session_time)} · {s.filled}/{s.capacity} vagas
+                        {s.ended
+                          ? `${fmtDT(s.session_time)} · sessão encerrada`
+                          : s.locked
+                            ? `${fmtDT(s.session_time)} · inscrição abre às ${fmtDT(new Date(new Date(s.session_time).getTime() - 60 * 60000).toISOString())}`
+                            : `${fmtDT(s.session_time)} · ${s.filled}/${s.capacity} vagas`}
                       </div>
                     </div>
-                    <Badge tone={s.full ? "wait" : "ok"}>{s.full ? "fila de espera" : "vaga livre"}</Badge>
+                    {!s.ended && (
+                      <Badge tone={s.locked ? "neutral" : s.full ? "wait" : "ok"}>
+                        {s.locked ? "bloqueada" : s.full ? "fila de espera" : "vaga livre"}
+                      </Badge>
+                    )}
                   </button>
                 );
               })}

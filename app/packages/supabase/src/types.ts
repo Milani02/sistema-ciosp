@@ -52,12 +52,13 @@ export interface LunchQueueEntry {
   joined_at: string;
 }
 
-export interface LunchSession {
+/** Uma linha por pessoa por almoço — cada um entra/sai sozinho
+ *  (autoatendimento), não em dupla fixa. */
+export interface LunchAttendance {
   id: number;
-  member_ids: number[];
-  member_names: string;
-  start_time: string;
-  end_time: string | null;
+  staff_id: number;
+  started_at: string;
+  ended_at: string | null;
 }
 
 export interface Shift {
@@ -112,9 +113,13 @@ export interface Profile {
   name: string;
   department: Department;
   level: AccessLevel;
+  /** Liga essa conta a uma pessoa do roster de `staff` — só existe em
+   *  login individual de autoatendimento do almoço (a maioria das contas,
+   *  que são por departamento/cargo, não tem isso). */
+  staff_id: number | null;
 }
 
-export type DocType = "cpf" | "cnpj";
+export type DocType = "cpf" | "cnpj" | "exterior";
 export type SinglePaymentMethod = "dinheiro" | "cartao" | "pix";
 export type PaymentMethod = SinglePaymentMethod | "misto";
 export type OrderStatus = "aguardando_pagamento" | "pago" | "entregue" | "cancelado";

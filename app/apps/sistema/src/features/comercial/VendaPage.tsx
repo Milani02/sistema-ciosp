@@ -16,6 +16,7 @@ import {
   Building2,
   CheckCircle2,
   CreditCard,
+  Globe,
   Minus,
   Plus,
   QrCode,
@@ -32,7 +33,7 @@ import { useAuth } from "../auth/useAuth";
 import { useLiveData } from "../live-data/useLiveData";
 import { printReceipt } from "./receipt";
 
-type DocType = "cpf" | "cnpj";
+type DocType = "cpf" | "cnpj" | "exterior";
 type LookupState = "idle" | "checking" | "invalid" | "found" | "new";
 interface CartLine {
   productId: number;
@@ -167,20 +168,32 @@ export function VendaPage() {
     );
   }, [activeProducts, productSearch]);
 
-  const docDigits = onlyDigits(docInput);
+  // Documento estrangeiro não segue os algoritmos de CPF/CNPJ (pode ter
+  // letras, tamanho variável) — usa o texto digitado direto, sem máscara
+  // nem checagem de dígito verificador.
+  const docDigits = docType === "exterior" ? docInput.trim() : onlyDigits(docInput);
 
   useEffect(() => {
-    const expectedLen = docType === "cpf" ? 11 : 14;
     setExistingCustomerId(null);
-    if (docDigits.length !== expectedLen) {
-      setLookupState("idle");
-      return;
+
+    if (docType === "exterior") {
+      if (docDigits.length < 3) {
+        setLookupState("idle");
+        return;
+      }
+    } else {
+      const expectedLen = docType === "cpf" ? 11 : 14;
+      if (docDigits.length !== expectedLen) {
+        setLookupState("idle");
+        return;
+      }
+      const valid = docType === "cpf" ? isValidCpf(docDigits) : isValidCnpj(docDigits);
+      if (!valid) {
+        setLookupState("invalid");
+        return;
+      }
     }
-    const valid = docType === "cpf" ? isValidCpf(docDigits) : isValidCnpj(docDigits);
-    if (!valid) {
-      setLookupState("invalid");
-      return;
-    }
+
     let cancelled = false;
     setLookupState("checking");
     (async () => {
@@ -272,11 +285,11 @@ export function VendaPage() {
 
   async function finalizeOrder() {
     if (lookupState === "idle" || lookupState === "checking") {
-      showToast(`Digite um ${docType.toUpperCase()} válido.`);
+      showToast(docType === "exterior" ? "Digite o documento do cliente." : `Digite um ${docType.toUpperCase()} válido.`);
       return;
     }
     if (lookupState === "invalid") {
-      showToast(`${docType.toUpperCase()} inválido — confira os números.`);
+      showToast(`${docType.toUpperCase()} inválido — confere os números.`);
       return;
     }
     if (!name.trim()) {
@@ -444,15 +457,35 @@ export function VendaPage() {
             <Building2 className="h-3.5 w-3.5" />
             CNPJ
           </Button>
+          <Button
+            variant={docType === "exterior" ? undefined : "outline"}
+            size="sm"
+            className="w-auto"
+            onClick={() => {
+              setDocType("exterior");
+              setDocInput("");
+            }}
+          >
+            <Globe className="h-3.5 w-3.5" />
+            Exterior
+          </Button>
         </div>
 
-        <FieldLabel>{docType === "cpf" ? "CPF" : "CNPJ"}</FieldLabel>
-        <Input
-          value={formatCpfCnpj(docInput)}
-          onChange={(e) => setDocInput(e.target.value)}
-          placeholder={docType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
-          inputMode="numeric"
-        />
+        <FieldLabel>{docType === "cpf" ? "CPF" : docType === "cnpj" ? "CNPJ" : "Documento (passaporte, ID etc.)"}</FieldLabel>
+        {docType === "exterior" ? (
+          <Input
+            value={docInput}
+            onChange={(e) => setDocInput(e.target.value)}
+            placeholder="Número do passaporte ou documento de identidade"
+          />
+        ) : (
+          <Input
+            value={formatCpfCnpj(docInput)}
+            onChange={(e) => setDocInput(e.target.value)}
+            placeholder={docType === "cpf" ? "000.000.000-00" : "00.000.000/0000-00"}
+            inputMode="numeric"
+          />
+        )}
         {lookupState === "checking" && <div className="mt-1 text-[0.76rem] text-ink-soft">Consultando...</div>}
         {lookupState === "invalid" && (
           <div className="mt-1 text-[0.76rem] font-semibold text-brick">
@@ -468,7 +501,7 @@ export function VendaPage() {
 
         {(lookupState === "found" || lookupState === "new") && (
           <>
-            <FieldLabel>Nome{docType === "cnpj" ? " / Razão social" : ""}</FieldLabel>
+            <FieldLabel>Nome{docType !== "cpf" ? " / Razão social" : ""}</FieldLabel>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" />
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>

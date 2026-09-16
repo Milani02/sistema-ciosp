@@ -43,6 +43,9 @@ const CadastrosPage = lazy(() =>
   import("../features/cadastro/CadastrosPage").then((m) => ({ default: m.CadastrosPage }))
 );
 const AlmocoPage = lazy(() => import("../features/almoco/AlmocoPage").then((m) => ({ default: m.AlmocoPage })));
+const SelfAlmocoPage = lazy(() =>
+  import("../features/almoco/SelfAlmocoPage").then((m) => ({ default: m.SelfAlmocoPage }))
+);
 
 function roleLabel(department: "tecnica" | "comercial" | "caixa" | "cadastro", level: "staff" | "admin") {
   if (department === "tecnica") return level === "admin" ? "Administrador · Consultoria Técnica" : "Consultoria Técnica";
@@ -59,7 +62,7 @@ function UserBadge() {
       <div className="text-right leading-tight">
         <div className="text-[0.78rem] font-bold text-white">{profile.name}</div>
         <div className="text-[0.62rem] font-semibold uppercase tracking-wide text-white/60">
-          {roleLabel(profile.department, profile.level)}
+          {profile.staff_id != null ? "Equipe" : roleLabel(profile.department, profile.level)}
         </div>
       </div>
       <button
@@ -165,14 +168,6 @@ function Shell() {
               }
             />
             <Route
-              path="/comercial/caixa"
-              element={
-                <RequireAccess department="comercial" adminOnly>
-                  <CaixaEstoquePage />
-                </RequireAccess>
-              }
-            />
-            <Route
               path="/comercial/produtos"
               element={
                 <RequireAccess department="comercial" adminOnly>
@@ -217,6 +212,14 @@ function Shell() {
               element={
                 <RequireAccess department={["comercial", "tecnica"]} adminOnly>
                   <AlmocoPage />
+                </RequireAccess>
+              }
+            />
+            <Route
+              path="/meu-almoco"
+              element={
+                <RequireAccess requireStaffLink>
+                  <SelfAlmocoPage />
                 </RequireAccess>
               }
             />

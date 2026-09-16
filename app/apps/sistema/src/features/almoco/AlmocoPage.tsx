@@ -15,9 +15,8 @@ import {
   StatTile,
 } from "@biodinamica/ui";
 import { CheckCircle2, Clock, Plus, RotateCcw, Timer, Trash2, Users, UtensilsCrossed } from "lucide-react";
-import type { Staff } from "@biodinamica/supabase";
+import type { LunchAttendance, Staff } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../auth/useAuth";
 import { useLiveData } from "../live-data/useLiveData";
 
 const TEAM_OPTIONS = ["Comercial", "Técnica", "Caixa"] as const;
@@ -27,11 +26,8 @@ function formatTime(iso: string) {
 }
 
 export function AlmocoPage() {
-  const { profile } = useAuth();
-  const { staff, lunchQueue, lunchSessions, loading } = useLiveData();
-  const [selected, setSelected] = useState<number[]>([]);
-  const [sending, setSending] = useState(false);
-  const [returningId, setReturningId] = useState<number | null>(null);
+  const { staff, lunchQueue, lunchAttendance, loading } = useLiveData();
+  const [endingId, setEndingId] = useState<number | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [newName, setNewName] = useState("");
@@ -40,54 +36,29 @@ export function AlmocoPage() {
   const [removingStaff, setRemovingStaff] = useState<Staff | null>(null);
   const [removingStaffBusy, setRemovingStaffBusy] = useState(false);
 
-  // Admin comercial só manda gente do Comercial pro almoço; admin técnica
-  // manda gente da Técnica OU do Caixa (o Caixa fica sob responsabilidade
-  // da Técnica). Mesma regra é validada de novo dentro da RPC no banco —
-  // isso aqui é só pra já filtrar a lista antes de tentar.
-  const allowedTeams: string[] =
-    profile?.department === "comercial" ? ["Comercial"] : profile?.department === "tecnica" ? ["Técnica", "Caixa"] : [];
+  const byId = useMemo(() => new Map(staff.map((s) => [s.id, s] as const)), [staff]);
 
   const pending = useMemo(() => staff.filter((s) => s.status === "pending"), [staff]);
-  const sendablePending = useMemo(() => pending.filter((s) => allowedTeams.includes(s.team)), [pending, allowedTeams]);
-  const outOfScopePendingCount = pending.length - sendablePending.length;
   const done = useMemo(() => staff.filter((s) => s.status === "done"), [staff]);
-  const eatingSessions = useMemo(
-    () => lunchSessions.filter((s) => !s.end_time).sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()),
-    [lunchSessions]
+  const eating = useMemo(
+    () =>
+      lunchAttendance
+        .filter((a) => !a.ended_at)
+        .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()),
+    [lunchAttendance]
   );
   const queued = useMemo(() => {
-    const byId = new Map(staff.map((s) => [s.id, s] as const));
     return [...lunchQueue]
       .sort((a, b) => new Date(a.joined_at).getTime() - new Date(b.joined_at).getTime())
       .map((q) => byId.get(q.staff_id))
       .filter((s): s is Staff => !!s);
-  }, [lunchQueue, staff]);
+  }, [lunchQueue, byId]);
   const allStaffSorted = useMemo(() => [...staff].sort((a, b) => a.name.localeCompare(b.name)), [staff]);
 
-  function toggleSelected(id: number) {
-    setSelected((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 2) return prev;
-      return [...prev, id];
-    });
-  }
-
-  async function mandarPraAlmoco() {
-    if (selected.length === 0) return;
-    setSending(true);
-    const { error } = await supabase.rpc("enter_lunch_queue_group", { p_staff_ids: selected });
-    setSending(false);
-    if (error) {
-      showToast("Erro ao mandar pro almoço: " + error.message);
-      return;
-    }
-    setSelected([]);
-  }
-
-  async function voltouDoAlmoco(sessionId: number) {
-    setReturningId(sessionId);
-    const { error } = await supabase.rpc("return_from_lunch", { p_session_id: sessionId });
-    setReturningId(null);
+  async function marcarVoltou(a: LunchAttendance) {
+    setEndingId(a.staff_id);
+    const { error } = await supabase.rpc("admin_end_lunch", { p_staff_id: a.staff_id });
+    setEndingId(null);
     if (error) showToast("Erro ao marcar volta: " + error.message);
   }
 
@@ -131,18 +102,13 @@ export function AlmocoPage() {
         icon={UtensilsCrossed}
         tone="clay"
         title="Almoço"
-        subtitle="Fila da copa — no máximo 2 pessoas almoçando por vez."
+        subtitle="Autoatendimento — cada pessoa marca sozinha quando vai e quando volta. Aqui você só acompanha."
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         <StatTile value={pending.length} label="Aguardando" icon={Users} tone="sage" live />
         <StatTile value={queued.length} label="Na fila" icon={Clock} tone="clay" />
-        <StatTile
-          value={eatingSessions.reduce((sum, s) => sum + s.member_ids.length, 0)}
-          label="Almoçando"
-          icon={Timer}
-          tone="moss"
-        />
+        <StatTile value={eating.length} label="Almoçando" icon={Timer} tone="moss" />
         <StatTile value={done.length} label="Já almoçou" icon={CheckCircle2} tone="sage" />
       </div>
 
@@ -150,30 +116,39 @@ export function AlmocoPage() {
         <CardTitle>Almoçando agora</CardTitle>
         {loading ? (
           <SkeletonRow />
-        ) : eatingSessions.length === 0 ? (
+        ) : eating.length === 0 ? (
           <EmptyState icon={Timer} title="Ninguém almoçando" subtitle="A mesa da copa está livre." />
         ) : (
           <div className="divide-y divide-line">
-            {eatingSessions.map((s) => (
-              <div key={s.id} className="flex items-center justify-between gap-2 py-2.5">
-                <div className="min-w-0">
-                  <div className="truncate text-[0.85rem] font-semibold text-ink">{s.member_names}</div>
-                  <div className="text-[0.72rem] text-ink-soft">desde {formatTime(s.start_time)}</div>
+            {eating.map((a) => {
+              const s = byId.get(a.staff_id);
+              return (
+                <div key={a.id} className="flex items-center justify-between gap-2 py-2.5">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="truncate text-[0.85rem] font-semibold text-ink">{s?.name ?? "—"}</span>
+                      {s && <Badge tone="neutral">{s.team}</Badge>}
+                    </div>
+                    <div className="text-[0.72rem] text-ink-soft">desde {formatTime(a.started_at)}</div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-auto shrink-0"
+                    loading={endingId === a.staff_id}
+                    onClick={() => marcarVoltou(a)}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Marcar volta
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-auto shrink-0"
-                  loading={returningId === s.id}
-                  onClick={() => voltouDoAlmoco(s.id)}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Voltou
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
+        <p className="mt-2 text-[0.72rem] text-ink-soft">
+          "Marcar volta" é só uma rede de segurança — use apenas se a pessoa esqueceu de apertar "terminei" sozinha.
+        </p>
       </Card>
 
       {queued.length > 0 && (
@@ -193,61 +168,6 @@ export function AlmocoPage() {
         </Card>
       )}
 
-      <Card className="mt-4">
-        <CardTitle>Mandar pro almoço</CardTitle>
-        <p className="mb-2 mt-1 text-[0.78rem] text-ink-soft">
-          Escolha 1 ou 2 pessoas por vez — só do seu time ({allowedTeams.join(" ou ")}).
-        </p>
-        {loading ? (
-          <SkeletonRow />
-        ) : sendablePending.length === 0 ? (
-          <EmptyState
-            icon={Users}
-            title="Ninguém do seu time aguardando"
-            subtitle={
-              outOfScopePendingCount > 0
-                ? `Tem ${outOfScopePendingCount} pessoa${outOfScopePendingCount === 1 ? "" : "s"} aguardando de outro time — quem manda é o admin de lá.`
-                : "Todo mundo já foi pro almoço ou já almoçou."
-            }
-          />
-        ) : (
-          <>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {sendablePending.map((s) => {
-                const isSelected = selected.includes(s.id);
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => toggleSelected(s.id)}
-                    disabled={!isSelected && selected.length >= 2}
-                    className={
-                      "flex items-center justify-between gap-2 rounded-xl border p-3 text-left disabled:cursor-not-allowed disabled:opacity-40 " +
-                      (isSelected ? "border-moss bg-sage-tint" : "border-line bg-surface")
-                    }
-                  >
-                    <div>
-                      <div className="text-[0.85rem] font-semibold text-ink">{s.name}</div>
-                      <div className="text-[0.72rem] text-ink-soft">{s.team}</div>
-                    </div>
-                    {isSelected && <CheckCircle2 className="h-4 w-4 shrink-0 text-moss-deep" />}
-                  </button>
-                );
-              })}
-            </div>
-            {outOfScopePendingCount > 0 && (
-              <p className="mt-2 text-[0.72rem] text-ink-soft">
-                +{outOfScopePendingCount} de outro time aguardando (não aparece aqui — quem manda é o admin de lá).
-              </p>
-            )}
-          </>
-        )}
-        <Button className="mt-3" disabled={selected.length === 0} loading={sending} onClick={mandarPraAlmoco}>
-          <UtensilsCrossed className="h-4 w-4" />
-          Mandar pro almoço {selected.length > 0 && `(${selected.length})`}
-        </Button>
-      </Card>
-
       {done.length > 0 && (
         <Card className="mt-4">
           <CardTitle>Já almoçou hoje</CardTitle>
@@ -263,7 +183,10 @@ export function AlmocoPage() {
 
       <Card className="mt-4">
         <CardTitle>Equipe</CardTitle>
-        <p className="mb-2 mt-1 text-[0.78rem] text-ink-soft">Cadastre quem vai estar no estande — inclusive o Caixa.</p>
+        <p className="mb-2 mt-1 text-[0.78rem] text-ink-soft">
+          Cadastre quem vai estar no estande — inclusive o Caixa. O <b>#número</b> ao lado do nome é o que você usa
+          pra vincular o login individual dessa pessoa (metadata <code>staff_id</code> ao criar a conta dela).
+        </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="flex-1">
             <FieldLabel className="mt-0">Nome</FieldLabel>
@@ -290,6 +213,7 @@ export function AlmocoPage() {
             {allStaffSorted.map((s) => (
               <div key={s.id} className="flex items-center justify-between gap-2 py-2">
                 <div className="flex items-center gap-2">
+                  <span className="text-[0.72rem] font-bold text-ink-soft">#{s.id}</span>
                   <span className="text-[0.84rem] text-ink">{s.name}</span>
                   <Badge tone="neutral">{s.team}</Badge>
                 </div>

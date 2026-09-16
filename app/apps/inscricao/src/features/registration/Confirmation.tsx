@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { CheckCircle2, Home, Ticket } from "lucide-react";
+import { Camera, CheckCircle2, Home, MapPin, Ticket } from "lucide-react";
 import { Badge, Button, Card } from "@biodinamica/ui";
 import type { Checkin } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { fmtDT } from "../../lib/format";
+
+// TODO: endereço fictício — trocar pelo endereço real do estande assim
+// que a organização do CIOSP divulgar o mapa/numeração dos estandes.
+const BOOTH_ADDRESS = "Expo Center Norte · Pavilhão Branco · Estande A-000";
 
 export function Confirmation({ token, onRestart }: { token: string; onRestart: () => void }) {
   const [reg, setReg] = useState<Checkin | null | undefined>(undefined);
@@ -118,13 +122,45 @@ export function Confirmation({ token, onRestart }: { token: string; onRestart: (
         <p className="mb-1 mt-3 text-sm text-ink">
           <b>{activityLbl}</b> — {reg.sessions?.title} · {reg.sessions ? fmtDT(reg.sessions.session_time) : ""}
         </p>
-        <p className="text-xs text-ink-soft">Chegue 15 min antes e mostre este QR pra equipe.</p>
-        <div className="mt-3 flex items-start gap-2.5 rounded-xl bg-clay-tint px-3.5 py-3 text-left">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/60 text-clay">
-            <Ticket className="h-[18px] w-[18px]" />
-          </span>
-          <p className="text-[0.82rem] font-medium text-ink">Pegue sua pulseira de identificação com a equipe do estande ao chegar.</p>
+
+        <div className="mt-4 rounded-xl border-2 border-moss bg-sage-tint px-4 py-3.5 text-left">
+          <div className="flex items-start gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/70 text-moss-deep">
+              <Ticket className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-[0.95rem] font-black leading-tight text-moss-deep">Inscrição efetuada</p>
+              <p className="mt-1 text-[0.86rem] font-semibold leading-snug text-ink">
+                Para confirmar sua inscrição, se dirija à equipe no estande e retire sua pulseira de acesso.
+              </p>
+              <p className="mt-2 flex items-center gap-1 text-[0.76rem] text-ink-soft">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {BOOTH_ADDRESS}
+              </p>
+            </div>
+          </div>
         </div>
+
+        <div className="mt-3 rounded-xl border-2 border-brick bg-brick-tint px-4 py-3.5 text-left">
+          <div className="flex items-start gap-2.5">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/70 text-brick">
+              <Camera className="h-5 w-5" />
+            </span>
+            <div className="space-y-1.5">
+              <p className="text-[0.84rem] font-bold leading-snug text-brick">
+                Tire um print/screenshot deste QR Code — sem ele você não entra na palestra/hands-on.
+              </p>
+              <p className="text-[0.78rem] font-semibold leading-snug text-brick/90">
+                Take a screenshot of this QR Code — without it you won't be able to enter the lecture/hands-on.
+              </p>
+              <p className="text-[0.78rem] font-semibold leading-snug text-brick/90">
+                Toma una captura de pantalla de este código QR — sin ella no podrás entrar a la charla/hands-on.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-3 text-xs text-ink-soft">Chegue 15 min antes e mostre este QR pra equipe.</p>
       </Card>
     );
   }

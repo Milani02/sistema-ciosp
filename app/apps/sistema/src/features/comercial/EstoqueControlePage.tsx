@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Badge, Card, EmptyState, Input, PageHeader, SkeletonRow, showToast } from "@biodinamica/ui";
-import { Boxes, Minus, Plus } from "lucide-react";
+import { Boxes, Minus, Plus, TriangleAlert } from "lucide-react";
 import type { Product } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../auth/useAuth";
@@ -27,6 +27,7 @@ export function EstoqueControlePage() {
   }
 
   const sorted = [...products].sort((a, b) => a.name.localeCompare(b.name));
+  const lowStock = sorted.filter((p) => p.active && p.stock <= LOW_STOCK_THRESHOLD);
 
   async function applyStockChange(product: Product, base: number, next: number, note?: string) {
     if (next === base) return;
@@ -92,6 +93,22 @@ export function EstoqueControlePage() {
         title="Estoque"
         subtitle="Quantidade física de cada produto — desconta sozinho quando um pedido é marcado entregue."
       />
+
+      {lowStock.length > 0 && (
+        <Card className="mb-4 border-brick/30 bg-brick-tint">
+          <div className="flex items-start gap-2.5">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-brick" />
+            <div>
+              <div className="text-[0.84rem] font-bold text-brick">
+                {lowStock.length} produto{lowStock.length === 1 ? "" : "s"} com estoque baixo
+              </div>
+              <div className="mt-0.5 text-[0.78rem] text-brick/90">
+                {lowStock.map((p) => `${p.name} (${p.stock})`).join(" · ")}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card>
         <div className="divide-y divide-line">

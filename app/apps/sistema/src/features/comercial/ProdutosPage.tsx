@@ -12,12 +12,14 @@ import {
   SkeletonRow,
   showToast,
 } from "@biodinamica/ui";
-import { Minus, Package, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Minus, Package, Pencil, Plus, Trash2, TriangleAlert, X } from "lucide-react";
 import type { Product } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../auth/useAuth";
 import { useLiveData } from "../live-data/useLiveData";
 import { RemoveStockSheet } from "./RemoveStockSheet";
+
+const LOW_STOCK_THRESHOLD = 5;
 
 export function ProdutosPage() {
   const { profile } = useAuth();
@@ -128,6 +130,7 @@ export function ProdutosPage() {
   }
 
   const sorted = [...products].sort((a, b) => a.name.localeCompare(b.name));
+  const lowStock = sorted.filter((p) => p.active && p.stock <= LOW_STOCK_THRESHOLD);
 
   return (
     <>
@@ -137,6 +140,22 @@ export function ProdutosPage() {
         title="Catálogo de produtos"
         subtitle="Cadastre os produtos e preços que aparecem no carrinho da tela de Venda."
       />
+
+      {lowStock.length > 0 && (
+        <Card className="mb-4 border-brick/30 bg-brick-tint">
+          <div className="flex items-start gap-2.5">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-brick" />
+            <div>
+              <div className="text-[0.84rem] font-bold text-brick">
+                {lowStock.length} produto{lowStock.length === 1 ? "" : "s"} com estoque baixo
+              </div>
+              <div className="mt-0.5 text-[0.78rem] text-brick/90">
+                {lowStock.map((p) => `${p.name} (${p.stock})`).join(" · ")}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Card>
@@ -219,6 +238,7 @@ export function ProdutosPage() {
                         <Plus className="h-3 w-3" />
                       </button>
                       <span className="ml-1 text-[0.7rem] text-ink-soft">em estoque</span>
+                      {p.active && p.stock <= LOW_STOCK_THRESHOLD && <Badge tone="crit">baixo</Badge>}
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
                       <button
