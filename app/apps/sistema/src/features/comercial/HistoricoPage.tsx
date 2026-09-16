@@ -13,9 +13,10 @@ import {
   SkeletonRow,
   StatTile,
 } from "@biodinamica/ui";
-import { ChevronLeft, ChevronRight, Download, History, Package2, Receipt, TrendingUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, History, Package2, Printer, Receipt, TrendingUp } from "lucide-react";
 import type { Order, OrderPayment, OrderStatus, PaymentMethod, SinglePaymentMethod } from "@biodinamica/supabase";
 import { useLiveData } from "../live-data/useLiveData";
+import { printReceipt } from "./receipt";
 
 const PAGE_SIZE = 10;
 
@@ -95,6 +96,16 @@ export function HistoricoPage({ itemsVariant = "compact" }: { itemsVariant?: "co
 
   function customerFor(order: Order) {
     return customers.find((c) => c.id === order.customer_id) ?? null;
+  }
+
+  function reimprimir(o: Order) {
+    const items = orderItems.filter((i) => i.order_id === o.id);
+    printReceipt({
+      order: o,
+      customerName: customerFor(o)?.name ?? null,
+      items: items.map((i) => ({ product_name: i.product_name, quantity: i.quantity, unit_price: i.unit_price })),
+      payments: (paymentsByOrder.get(o.id) ?? []).map((p) => ({ method: p.method, amount: p.amount })),
+    });
   }
 
   const filtered = useMemo(() => {
@@ -293,6 +304,16 @@ export function HistoricoPage({ itemsVariant = "compact" }: { itemsVariant?: "co
                         <span className="text-[0.8rem] font-bold tabular-nums text-ink">
                           {o.total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
                         </span>
+                        {(o.status === "pago" || o.status === "entregue") && (
+                          <button
+                            type="button"
+                            onClick={() => reimprimir(o)}
+                            className="flex items-center gap-1 rounded-lg px-1.5 py-1 text-[0.7rem] font-semibold text-ink-soft hover:bg-sage-tint hover:text-moss-deep"
+                          >
+                            <Printer className="h-3 w-3" />
+                            Reimprimir
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
