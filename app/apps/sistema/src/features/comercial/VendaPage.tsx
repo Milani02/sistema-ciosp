@@ -177,21 +177,23 @@ export function VendaPage() {
     setExistingCustomerId(null);
 
     if (docType === "exterior") {
-      if (docDigits.length < 3) {
-        setLookupState("idle");
-        return;
-      }
-    } else {
-      const expectedLen = docType === "cpf" ? 11 : 14;
-      if (docDigits.length !== expectedLen) {
-        setLookupState("idle");
-        return;
-      }
-      const valid = docType === "cpf" ? isValidCpf(docDigits) : isValidCnpj(docDigits);
-      if (!valid) {
-        setLookupState("invalid");
-        return;
-      }
+      // Documento de fora não consulta nada do banco — cada visitante
+      // estrangeiro preenche os dados na mão, sempre do zero. Não
+      // reaproveita dado de nenhum passaporte parecido/já digitado antes
+      // (diferente de CPF/CNPJ, que puxam o cadastro se já existir).
+      setLookupState(docDigits.length < 3 ? "idle" : "new");
+      return;
+    }
+
+    const expectedLen = docType === "cpf" ? 11 : 14;
+    if (docDigits.length !== expectedLen) {
+      setLookupState("idle");
+      return;
+    }
+    const valid = docType === "cpf" ? isValidCpf(docDigits) : isValidCnpj(docDigits);
+    if (!valid) {
+      setLookupState("invalid");
+      return;
     }
 
     let cancelled = false;
