@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AppHeader, LivingLinesBackground, ThemeToggle, Toaster } from "@biodinamica/ui";
-import type { Activity } from "@biodinamica/supabase";
+import type { Activity, Session } from "@biodinamica/supabase";
 import { ActivityChoice } from "../features/registration/ActivityChoice";
 import { SessionList } from "../features/registration/SessionList";
 import { RegistrationForm } from "../features/registration/RegistrationForm";
@@ -9,7 +9,7 @@ import { Confirmation } from "../features/registration/Confirmation";
 type Step =
   | { name: "activity" }
   | { name: "sessions"; activity: Activity }
-  | { name: "form"; activity: Activity; sessionId?: number }
+  | { name: "form"; activity: Activity; session: Session }
   | { name: "confirm"; token: string };
 
 function initialStep(): Step {
@@ -36,28 +36,22 @@ export default function App() {
         )}
 
         {step.name === "activity" && (
-          <ActivityChoice
-            onChoose={(activity) =>
-              setStep(activity === "handson" ? { name: "form", activity } : { name: "sessions", activity })
-            }
-          />
+          <ActivityChoice onChoose={(activity) => setStep({ name: "sessions", activity })} />
         )}
 
         {step.name === "sessions" && (
           <SessionList
             activity={step.activity}
             onBack={() => setStep({ name: "activity" })}
-            onSelect={(sessionId) => setStep({ name: "form", activity: step.activity, sessionId })}
+            onSelect={(session) => setStep({ name: "form", activity: step.activity, session })}
           />
         )}
 
         {step.name === "form" && (
           <RegistrationForm
             activity={step.activity}
-            sessionId={step.sessionId}
-            onBack={() =>
-              setStep(step.sessionId !== undefined ? { name: "sessions", activity: step.activity } : { name: "activity" })
-            }
+            session={step.session}
+            onBack={() => setStep({ name: "sessions", activity: step.activity })}
             onRegistered={(token) => setStep({ name: "confirm", token })}
           />
         )}

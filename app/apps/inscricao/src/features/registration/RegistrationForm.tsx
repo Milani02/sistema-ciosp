@@ -1,30 +1,20 @@
-import { useEffect, useState } from "react";
-import { Badge, Button, Card, FieldLabel, Input, cn, showToast } from "@biodinamica/ui";
-import { Lock } from "lucide-react";
+import { useState } from "react";
+import { Button, Card, FieldLabel, IconChip, Input, showToast } from "@biodinamica/ui";
+import { FlaskConical, Mic } from "lucide-react";
 import type { Activity, Session } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { fmtDT } from "../../lib/format";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-interface ListedSession extends Session {
-  filled: number;
-  full: boolean;
-  locked: boolean;
-  ended: boolean;
-}
-
 export function RegistrationForm({
   activity,
-  sessionId,
+  session,
   onBack,
   onRegistered,
 }: {
   activity: Activity;
-  /** Already chosen (palestra flow, picked on the previous screen). When
-   *  absent (hands-on flow), the form itself lets the visitor pick which
-   *  hands-on session — see `handsonSessions` below. */
-  sessionId?: number;
+  session: Session;
   onBack: () => void;
   onRegistered: (token: string) => void;
 }) {
@@ -35,58 +25,21 @@ export function RegistrationForm({
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const needsSessionPick = activity === "handson" && sessionId === undefined;
-  const [handsonSessions, setHandsonSessions] = useState<ListedSession[]>([]);
-  const [chosenSessionId, setChosenSessionId] = useState("");
-  const [loadingSessions, setLoadingSessions] = useState(needsSessionPick);
-
-  useEffect(() => {
-    if (!needsSessionPick) return;
-    let cancelled = false;
-    async function load() {
-      setLoadingSessions(true);
-      const now = new Date();
-      const [{ data: sess }, { data: checkins }] = await Promise.all([
-        supabase.from("sessions").select("*").eq("activity", "handson"),
-        supabase.from("checkins").select("session_id,status"),
-      ]);
-      if (cancelled) return;
-      const all = (sess ?? [])
-        .map((s) => {
-          const t = new Date(s.session_time);
-          const opensAt = new Date(t.getTime() - 60 * 60000);
-          const filled = (checkins ?? []).filter(
-            (c) => c.session_id === s.id && (c.status === "confirmed" || c.status === "checked_in")
-          ).length;
-          return { ...s, filled, full: filled >= s.capacity, locked: now < opensAt, ended: now > t };
-        })
-        .sort((a, b) => new Date(a.session_time).getTime() - new Date(b.session_time).getTime());
-      setHandsonSessions(all);
-      setLoadingSessions(false);
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [needsSessionPick]);
-
   async function submit() {
     const trimmedName = name.trim();
     const trimmedCro = cro.trim();
     const trimmedEsp = especialidade.trim();
     const trimmedEmail = email.trim();
-    const finalSessionId = needsSessionPick ? parseInt(chosenSessionId, 10) : sessionId!;
 
     if (!trimmedName) return showToast("Digite seu nome completo.");
     if (!trimmedCro) return showToast("Digite seu CRO de CD.");
     if (!trimmedEsp) return showToast("Digite sua especialidade.");
     if (telefone.length < 10) return showToast("Digite um telefone válido com DDD.");
     if (!EMAIL_RE.test(trimmedEmail)) return showToast("Digite um e-mail válido.");
-    if (needsSessionPick && !chosenSessionId) return showToast("Escolha o hands-on que você vai fazer.");
 
     setSubmitting(true);
     const { data, error } = await supabase.rpc("register_visitor", {
-      p_session_id: finalSessionId,
+      p_session_id: session.id,
       p_name: trimmedName,
       p_cro: trimmedCro,
       p_especialidade: trimmedEsp,
@@ -105,6 +58,14 @@ export function RegistrationForm({
 
   return (
     <Card>
+      <div className="mb-4 flex items-center gap-3 rounded-xl border border-line bg-linen/60 px-3 py-2.5">
+        <IconChip icon={activity === "handson" ? FlaskConical : Mic} tone={activity === "handson" ? "clay" : "moss"} className="h-9 w-9" iconClassName="h-4 w-4" />
+        <div className="min-w-0">
+          <div className="truncate text-[0.88rem] font-bold text-ink">{session.title}</div>
+          <div className="text-[0.76rem] text-ink-soft">{fmtDT(session.session_time)}</div>
+        </div>
+      </div>
+
       <FieldLabel className="mt-0">Nome Completo *</FieldLabel>
       <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome completo" />
 
@@ -129,55 +90,6 @@ export function RegistrationForm({
 
       <FieldLabel>E-mail *</FieldLabel>
       <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="voce@email.com" />
-
-      {needsSessionPick && (
-        <>
-          <FieldLabel>Hands-on Inscrito *</FieldLabel>
-          {loadingSessions ? (
-            <p className="py-2 text-sm text-ink-soft">Carregando hands-on disponíveis...</p>
-          ) : handsonSessions.length === 0 ? (
-            <p className="py-2 text-sm text-ink-soft">Nenhum hands-on cadastrado ainda.</p>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {handsonSessions.map((s) => {
-                const selected = chosenSessionId === String(s.id);
-                const disabled = s.locked || s.ended;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => setChosenSessionId(String(s.id))}
-                    className={cn(
-                      "flex w-full items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60",
-                      selected ? "border-moss bg-sage-tint" : "border-line bg-surface hover:border-sage disabled:hover:border-line"
-                    )}
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5 text-[0.92rem] font-bold text-ink">
-                        {s.locked && <Lock className="h-3.5 w-3.5 shrink-0 text-ink-soft" />}
-                        {s.title}
-                      </div>
-                      <div className="text-[0.78rem] text-ink-soft">
-                        {s.ended
-                          ? `${fmtDT(s.session_time)} · sessão encerrada`
-                          : s.locked
-                            ? `${fmtDT(s.session_time)} · inscrição abre às ${fmtDT(new Date(new Date(s.session_time).getTime() - 60 * 60000).toISOString())}`
-                            : `${fmtDT(s.session_time)} · ${s.filled}/${s.capacity} vagas`}
-                      </div>
-                    </div>
-                    {!s.ended && (
-                      <Badge tone={s.locked ? "neutral" : s.full ? "wait" : "ok"}>
-                        {s.locked ? "bloqueada" : s.full ? "fila de espera" : "vaga livre"}
-                      </Badge>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
 
       <Button className="mt-4" loading={submitting} onClick={submit}>
         {submitting ? "Enviando..." : "Confirmar inscrição"}
