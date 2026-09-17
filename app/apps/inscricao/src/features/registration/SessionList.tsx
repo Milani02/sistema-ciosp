@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge, Button } from "@biodinamica/ui";
-import { Lock, Users } from "lucide-react";
+import { Lock } from "lucide-react";
 import type { Activity, Session } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
 import { fmtDT } from "../../lib/format";
@@ -29,40 +29,11 @@ interface ListedSession extends Session {
 const HANDSON_COVERS = [handson1, handson2, handson3, handson4, handson5, handson6, handson7];
 const PALESTRA_COVERS = [palestra1, palestra2, palestra3, palestra4, palestra5, palestra6, palestra7];
 
-// Cada sessão pega uma foto diferente do pool (nunca a mesma pra duas
-// sessões seguidas da mesma atividade) — sem nenhuma informação escrita
-// em cima da foto, as infos ficam todas ao lado, no conteúdo do card.
+// Cada sessão pega uma foto diferente do pool (por posição na lista, nunca
+// repete entre as visíveis).
 function coverFor(activity: Activity, index: number) {
   const pool = activity === "handson" ? HANDSON_COVERS : PALESTRA_COVERS;
   return pool[index % pool.length];
-}
-
-function SessionThumb({
-  activity,
-  index,
-  locked,
-  dimmed,
-}: {
-  activity: Activity;
-  index: number;
-  locked?: boolean;
-  dimmed?: boolean;
-}) {
-  return (
-    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-linen">
-      <img
-        src={coverFor(activity, index)}
-        alt=""
-        loading="lazy"
-        className={"h-full w-full object-cover " + (dimmed ? "grayscale" : "")}
-      />
-      {locked && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/55">
-          <Lock className="h-5 w-5 text-white" strokeWidth={2} />
-        </div>
-      )}
-    </div>
-  );
 }
 
 export function SessionList({
@@ -119,15 +90,9 @@ export function SessionList({
       <div className="mb-3 text-[0.8rem] font-semibold text-white/70">Todas as sessões — {label}</div>
 
       {loading ? (
-        <div className="flex flex-col gap-2">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-center gap-3 rounded-xl bg-surface p-2.5 shadow-[var(--shadow-card)]">
-              <div className="h-16 w-16 shrink-0 animate-pulse rounded-xl bg-linen" />
-              <div className="min-w-0 flex-1 space-y-2">
-                <div className="h-3.5 w-2/3 animate-pulse rounded bg-linen" />
-                <div className="h-3 w-1/3 animate-pulse rounded bg-linen" />
-              </div>
-            </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="aspect-[3/4] animate-pulse rounded-2xl bg-surface" />
           ))}
         </div>
       ) : sessions.length === 0 ? (
@@ -135,40 +100,62 @@ export function SessionList({
           Nenhuma sessão cadastrada ainda.
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-3">
           {sessions.map((s, index) => {
             const disabled = s.locked || s.ended;
+            const pct = s.capacity > 0 ? Math.min(100, Math.round((s.filled / s.capacity) * 100)) : 0;
             return (
               <button
                 key={s.id}
                 type="button"
                 disabled={disabled}
                 onClick={() => onSelect(s)}
-                className="flex w-full items-center gap-3 rounded-xl bg-surface p-2.5 text-left shadow-[var(--shadow-card)] transition-transform duration-200 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-80 disabled:hover:translate-y-0"
+                className="group relative aspect-[3/4] overflow-hidden rounded-2xl text-left shadow-[var(--shadow-card)] transition-transform duration-200 active:scale-[0.97] disabled:cursor-not-allowed"
               >
-                <SessionThumb activity={activity} index={index} locked={s.locked} dimmed={disabled} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 truncate text-[0.86rem] font-bold leading-snug text-ink">{s.title}</div>
-                    {!s.ended && (
-                      <Badge tone={s.locked ? "neutral" : s.full ? "wait" : "ok"} className="shrink-0 text-[0.68rem]">
-                        {s.locked ? "bloqueada" : s.full ? "fila de espera" : "vaga livre"}
-                      </Badge>
-                    )}
+                <img
+                  src={coverFor(activity, index)}
+                  alt=""
+                  loading="lazy"
+                  className={"absolute inset-0 h-full w-full object-cover " + (disabled ? "grayscale" : "")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-black/5" />
+
+                {!s.ended && (
+                  <div className="absolute right-2 top-2">
+                    <Badge tone={s.locked ? "neutral" : s.full ? "wait" : "ok"} className="text-[0.62rem]">
+                      {s.locked ? "bloqueada" : s.full ? "fila" : "livre"}
+                    </Badge>
                   </div>
-                  <div className="mt-0.5 text-[0.76rem] text-ink-soft">{fmtDT(s.session_time)}</div>
-                  <div className="mt-0.5 text-[0.72rem] text-ink-soft">
-                    {s.ended ? (
-                      "Sessão encerrada"
-                    ) : s.locked ? (
-                      `Abre às ${fmtDT(new Date(new Date(s.session_time).getTime() - 60 * 60000).toISOString())}`
-                    ) : (
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="h-3 w-3" />
+                )}
+
+                {s.locked && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="rounded-full bg-black/55 p-2.5">
+                      <Lock className="h-5 w-5 text-white" strokeWidth={2} />
+                    </div>
+                  </div>
+                )}
+
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <div className="line-clamp-2 text-[0.86rem] font-bold leading-tight text-white">{s.title}</div>
+                  <div className="mt-1 text-[0.7rem] text-white/75">{fmtDT(s.session_time)}</div>
+
+                  {s.ended ? (
+                    <div className="mt-1.5 text-[0.66rem] text-white/60">Sessão encerrada</div>
+                  ) : s.locked ? (
+                    <div className="mt-1.5 text-[0.66rem] text-white/60">
+                      Abre às {fmtDT(new Date(new Date(s.session_time).getTime() - 60 * 60000).toISOString())}
+                    </div>
+                  ) : (
+                    <div className="mt-2">
+                      <div className="h-1 w-full overflow-hidden rounded-full bg-white/25">
+                        <div className="h-full rounded-full bg-moss-bright" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="mt-1 text-[0.64rem] text-white/70">
                         {s.filled}/{s.capacity} vagas
-                      </span>
-                    )}
-                  </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </button>
             );
