@@ -183,6 +183,9 @@
   @keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   .animate-rise { animation: rise-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+  @keyframes accordion-down { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
+  @keyframes accordion-up { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
+
   /* Skeleton shimmer for the first data load — a moving highlight instead of
      a flat pulsing block, so it reads as "loading" rather than "broken". */
   .skeleton-shimmer {

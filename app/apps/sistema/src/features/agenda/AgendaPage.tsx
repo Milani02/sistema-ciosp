@@ -1,14 +1,18 @@
 import { useMemo, useState } from "react";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Badge,
+  BottomSheet,
   Button,
   Card,
-  CardTitle,
   EmptyState,
   FieldLabel,
+  IconChip,
   Input,
   ListEmpty,
-  ListRow,
   PageHeader,
   Select,
   SkeletonRow,
@@ -16,7 +20,6 @@ import {
 } from "@biodinamica/ui";
 import {
   Calendar,
-  ChevronDown,
   FlaskConical,
   Mail,
   Mic,
@@ -26,7 +29,7 @@ import {
   Star,
   Trash2,
   UserRound,
-  X,
+  Users,
 } from "lucide-react";
 import type { Activity, Checkin, CheckinStatus, Session } from "@biodinamica/supabase";
 import { supabase } from "../../lib/supabase";
@@ -45,16 +48,32 @@ const STATUS_BADGE: Record<CheckinStatus, { tone: "ok" | "wait" | "crit" | "neut
 function RegistrantRow({ c }: { c: Checkin }) {
   const status = STATUS_BADGE[c.status];
   return (
-    <ListRow
-      icon={UserRound}
-      title={c.visitor_name}
-      subtitle={
-        [c.cro, c.especialidade].filter(Boolean).join(" · ") ||
-        undefined
-      }
-      trailing={<Badge tone={status.tone}>{status.label}</Badge>}
-      className="items-start"
-    />
+    <div className="flex items-start gap-2.5 py-2.5">
+      <IconChip icon={UserRound} tone="sage" className="h-8 w-8" iconClassName="h-4 w-4" />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="truncate text-[0.85rem] font-semibold text-ink">{c.visitor_name}</span>
+          <Badge tone={status.tone}>{status.label}</Badge>
+        </div>
+        {(c.cro || c.especialidade) && (
+          <div className="mt-0.5 text-[0.76rem] text-ink-soft">{[c.cro, c.especialidade].filter(Boolean).join(" · ")}</div>
+        )}
+        {(c.telefone || c.email) && (
+          <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.74rem] text-ink-soft">
+            {c.telefone && (
+              <span className="inline-flex items-center gap-1">
+                <Phone className="h-3 w-3 shrink-0" /> {c.telefone}
+              </span>
+            )}
+            {c.email && (
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <Mail className="h-3 w-3 shrink-0" /> <span className="truncate">{c.email}</span>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -72,7 +91,7 @@ function SessionRating({ sessionId }: { sessionId: number }) {
   }
 
   return (
-    <div className="mb-3 ml-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-linen/60 px-3 py-2">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line bg-linen/60 px-3 py-2.5">
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -97,33 +116,35 @@ function SessionRating({ sessionId }: { sessionId: number }) {
 export function AgendaPage() {
   const { sessions, checkins, loading } = useLiveData();
 
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [activity, setActivity] = useState<Activity>("handson");
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("");
   const [capacity, setCapacity] = useState("8");
   const [submitting, setSubmitting] = useState(false);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const sorted = useMemo(
     () => [...sessions].sort((a, b) => new Date(a.session_time).getTime() - new Date(b.session_time).getTime()),
     [sessions]
   );
 
-  function startEdit(s: Session) {
-    setEditingId(s.id);
-    setActivity(s.activity);
-    setTitle(s.title);
-    setTime(toLocalInputValue(s.session_time));
-    setCapacity(String(s.capacity));
-  }
-
-  function cancelEdit() {
+  function openNew() {
     setEditingId(null);
     setActivity("handson");
     setTitle("");
     setTime("");
     setCapacity("8");
+    setSheetOpen(true);
+  }
+
+  function openEdit(s: Session) {
+    setEditingId(s.id);
+    setActivity(s.activity);
+    setTitle(s.title);
+    setTime(toLocalInputValue(s.session_time));
+    setCapacity(String(s.capacity));
+    setSheetOpen(true);
   }
 
   function toLocalInputValue(iso: string) {
@@ -153,13 +174,12 @@ export function AgendaPage() {
       return;
     }
     showToast(editingId ? "Sessão atualizada." : "Sessão adicionada.");
-    cancelEdit();
+    setSheetOpen(false);
   }
 
   async function removeSession(id: number) {
     const { error } = await supabase.from("sessions").delete().eq("id", id);
     if (error) showToast("Erro: " + error.message);
-    if (editingId === id) cancelEdit();
   }
 
   return (
@@ -171,126 +191,106 @@ export function AgendaPage() {
         subtitle="Cadastre, edite e acompanhe quem se inscreveu em cada hands-on e palestra. Atualiza sozinho conforme os check-ins acontecem."
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card>
-          <div className="flex items-center justify-between">
-            <CardTitle>{editingId ? "Editar sessão" : "Nova sessão"}</CardTitle>
-            {editingId && (
-              <button type="button" onClick={cancelEdit} className="text-ink-soft hover:text-ink" aria-label="Cancelar edição">
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-          <FieldLabel className="mt-0">Atividade</FieldLabel>
-          <Select value={activity} onChange={(e) => setActivity(e.target.value as Activity)}>
-            <option value="handson">Hands-on</option>
-            <option value="palestra">Palestra</option>
-          </Select>
-          <FieldLabel>Título</FieldLabel>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Restauração Estética" />
-          <FieldLabel>Data e horário</FieldLabel>
-          <Input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} />
-          <FieldLabel>Vagas</FieldLabel>
-          <Input type="number" min={1} className="w-24" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-          <Button className="mt-3" loading={submitting} onClick={saveSession}>
-            {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {editingId ? "Salvar alterações" : "Adicionar sessão"}
-          </Button>
-          {editingId && (
-            <Button variant="outline" size="sm" className="mt-2 w-full" onClick={cancelEdit}>
-              Cancelar edição
-            </Button>
-          )}
-        </Card>
+      <Button className="w-auto" onClick={openNew}>
+        <Plus className="h-4 w-4" />
+        Nova sessão
+      </Button>
 
-        <Card>
-          <CardTitle>Sessões cadastradas</CardTitle>
-          <div className="mt-2 max-h-[560px] divide-y divide-line overflow-y-auto border-t border-line">
-            {loading ? (
-              <>
-                <SkeletonRow />
-                <SkeletonRow />
-                <SkeletonRow />
-              </>
-            ) : sorted.length === 0 ? (
-              <EmptyState icon={Calendar} title="Nenhuma sessão ainda" subtitle="Cadastre a primeira sessão de hands-on ou palestra ao lado." />
-            ) : (
-              sorted.map((s) => {
-                const filled = sessionFillCount(checkins, s.id);
-                const level = capacityLevel(filled, s.capacity);
-                const started = new Date(s.session_time).getTime() <= Date.now();
-                const expanded = expandedId === s.id;
-                const registrants = checkins
-                  .filter((c) => c.session_id === s.id)
-                  .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-                return (
-                  <div key={s.id}>
-                    <ListRow
-                      icon={s.activity === "handson" ? FlaskConical : Mic}
-                      title={s.title}
-                      subtitle={`${fmtDT(s.session_time)} · ${s.activity === "handson" ? "Hands-on" : "Palestra"}`}
-                      trailing={
-                        <>
-                          <Badge tone={level}>
-                            {filled}/{s.capacity}
-                          </Badge>
-                          <button
-                            type="button"
-                            onClick={() => setExpandedId(expanded ? null : s.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft hover:bg-sage-tint hover:text-moss-deep"
-                            aria-label={expanded ? "Esconder inscritos" : "Ver inscritos"}
-                          >
-                            <ChevronDown className={"h-4 w-4 transition-transform " + (expanded ? "rotate-180" : "")} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => startEdit(s)}
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-soft hover:bg-sage-tint hover:text-moss-deep"
-                            aria-label="Editar sessão"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <Button variant="danger" size="sm" className="w-auto" onClick={() => removeSession(s.id)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </>
-                      }
-                    />
-                    {expanded && started && <SessionRating sessionId={s.id} />}
-                    {expanded && (
-                      <div className="mb-3 ml-4 rounded-xl border border-line bg-linen/60 px-3 py-1.5">
-                        {registrants.length === 0 ? (
-                          <ListEmpty>Ninguém inscrito ainda.</ListEmpty>
-                        ) : (
-                          <div className="divide-y divide-line">
-                            {registrants.map((c) => (
-                              <div key={c.id} className="py-2.5">
-                                <RegistrantRow c={c} />
-                                <div className="ml-[calc(2.25rem+0.75rem)] mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[0.74rem] text-ink-soft">
-                                  {c.telefone && (
-                                    <span className="inline-flex items-center gap-1">
-                                      <Phone className="h-3 w-3" /> {c.telefone}
-                                    </span>
-                                  )}
-                                  {c.email && (
-                                    <span className="inline-flex items-center gap-1">
-                                      <Mail className="h-3 w-3" /> {c.email}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+      <div className="mt-4 flex flex-col gap-3">
+        {loading ? (
+          <Card>
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </Card>
+        ) : sorted.length === 0 ? (
+          <Card>
+            <EmptyState icon={Calendar} title="Nenhuma sessão ainda" subtitle='Toque em "Nova sessão" pra cadastrar a primeira.' />
+          </Card>
+        ) : (
+          sorted.map((s) => {
+            const filled = sessionFillCount(checkins, s.id);
+            const level = capacityLevel(filled, s.capacity);
+            const started = new Date(s.session_time).getTime() <= Date.now();
+            const registrants = checkins
+              .filter((c) => c.session_id === s.id)
+              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+            return (
+              <Card key={s.id}>
+                <div className="flex items-start gap-3">
+                  <IconChip icon={s.activity === "handson" ? FlaskConical : Mic} tone={s.activity === "handson" ? "clay" : "moss"} />
+                  <div className="min-w-0 flex-1">
+                    <div className="break-words text-[0.9rem] font-semibold leading-snug text-ink">{s.title}</div>
+                    <div className="mt-0.5 text-[0.78rem] text-ink-soft">
+                      {fmtDT(s.session_time)} · {s.activity === "handson" ? "Hands-on" : "Palestra"}
+                    </div>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </Card>
+                  <Badge tone={level} className="shrink-0">
+                    {filled}/{s.capacity}
+                  </Badge>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="w-auto" onClick={() => openEdit(s)}>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Editar
+                  </Button>
+                  <Button variant="danger" size="sm" className="w-auto" onClick={() => removeSession(s.id)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir
+                  </Button>
+                </div>
+
+                <Accordion type="single" collapsible className="mt-1">
+                  <AccordionItem value={String(s.id)} className="border-t border-line">
+                    <AccordionTrigger>
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5" />
+                        Ver inscritos ({registrants.length})
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {started && <SessionRating sessionId={s.id} />}
+                      {registrants.length === 0 ? (
+                        <ListEmpty>Ninguém inscrito ainda.</ListEmpty>
+                      ) : (
+                        <div className="divide-y divide-line">
+                          {registrants.map((c) => (
+                            <RegistrantRow key={c.id} c={c} />
+                          ))}
+                        </div>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </Card>
+            );
+          })
+        )}
       </div>
+
+      <BottomSheet open={sheetOpen} onOpenChange={setSheetOpen} title={editingId ? "Editar sessão" : "Nova sessão"}>
+        <FieldLabel className="mt-0">Atividade</FieldLabel>
+        <Select value={activity} onChange={(e) => setActivity(e.target.value as Activity)}>
+          <option value="handson">Hands-on</option>
+          <option value="palestra">Palestra</option>
+        </Select>
+        <FieldLabel>Título</FieldLabel>
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Restauração Estética" />
+        <FieldLabel>Data e horário</FieldLabel>
+        <Input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} />
+        <FieldLabel>Vagas</FieldLabel>
+        <Input type="number" min={1} className="w-24" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+        <div className="mt-3 flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => setSheetOpen(false)}>
+            Cancelar
+          </Button>
+          <Button className="flex-1" loading={submitting} onClick={saveSession}>
+            {editingId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+            {editingId ? "Salvar" : "Adicionar"}
+          </Button>
+        </div>
+      </BottomSheet>
     </>
   );
 }

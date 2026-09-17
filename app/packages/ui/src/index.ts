@@ -18,4 +18,5 @@ export * from "./components/Toast";
 export * from "./components/InfoBanner";
 export * from "./components/ThemeToggle";
 export * from "./components/ErrorBoundary";
+export * from "./components/Accordion";
 export * from "./icons";
