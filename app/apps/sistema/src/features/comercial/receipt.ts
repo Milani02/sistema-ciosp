@@ -80,7 +80,7 @@ function buildReceiptHtml({ order, customerName, items, payments }: ReceiptData)
 <style>
   @page { size: 80mm auto; margin: 0; }
   * { box-sizing: border-box; }
-  body { width: 76mm; margin: 0 auto; padding: 4mm 2mm; font-family: "Courier New", monospace; font-size: 11px; color: #000; }
+  body { width: 76mm; margin: 0 auto; padding: 4mm 2mm; font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #000; }
   .center { text-align: center; }
   .bold { font-weight: bold; }
   .divider { border-top: 1px dashed #000; margin: 6px 0; }
