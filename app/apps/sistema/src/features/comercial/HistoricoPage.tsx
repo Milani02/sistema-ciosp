@@ -59,7 +59,7 @@ function formatOrderTime(iso: string) {
 }
 
 export function HistoricoPage({ itemsVariant = "compact" }: { itemsVariant?: "compact" | "detailed" }) {
-  const { orders, orderItems, orderPayments, customers, loading } = useLiveData();
+  const { orders, orderItems, orderPayments, customers, products, loading } = useLiveData();
 
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentMethod | "all">("all");
@@ -103,7 +103,12 @@ export function HistoricoPage({ itemsVariant = "compact" }: { itemsVariant?: "co
     printReceipt({
       order: o,
       customerName: customerFor(o)?.name ?? null,
-      items: items.map((i) => ({ product_name: i.product_name, quantity: i.quantity, unit_price: i.unit_price })),
+      items: items.map((i) => ({
+        code: products.find((p) => p.id === i.product_id)?.code ?? null,
+        product_name: i.product_name,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+      })),
       payments: (paymentsByOrder.get(o.id) ?? []).map((p) => ({ method: p.method, amount: p.amount })),
     });
   }

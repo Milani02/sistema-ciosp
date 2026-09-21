@@ -414,7 +414,12 @@ export function VendaPage() {
           cash_change: null,
         },
         customerName: name.trim() || null,
-        items: cart.map((i) => ({ product_name: i.name, quantity: i.quantity, unit_price: i.unitPrice })),
+        items: cart.map((i) => ({
+          code: products.find((p) => p.id === i.productId)?.code ?? null,
+          product_name: i.name,
+          quantity: i.quantity,
+          unit_price: i.unitPrice,
+        })),
         payments: splitMode ? splitEntries : [],
       });
     }

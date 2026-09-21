@@ -488,6 +488,7 @@ export function CaixaEstoquePage() {
       order: { ...order, ...patch },
       customerName: customer?.name ?? null,
       items: (itemsByOrder.get(order.id) ?? []).map((i) => ({
+        code: products.find((p) => p.id === i.product_id)?.code ?? null,
         product_name: i.product_name,
         quantity: i.quantity,
         unit_price: i.unit_price,
