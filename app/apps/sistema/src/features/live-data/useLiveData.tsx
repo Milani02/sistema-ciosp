@@ -82,9 +82,11 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
   // pagamento, ver o que separar) e de products (aba de estoque).
   const needsOrdersData = isComercial || isCaixa;
   const needsProducts = isComercial || isCaixa;
-  // Cadastro só precisa de customers (nem orders nem products) — pra
-  // acompanhar em tempo real quem o Comercial cadastrou na venda.
+  // Cadastro precisa de customers (dados de contato) e de orders (cada
+  // pedido é uma linha na tela — inclusive quando é a 2ª+ compra de um
+  // cliente que já tinha cadastro) — mas não de order_items/payments/caixa.
   const needsCustomers = needsOrdersData || isCadastro;
+  const needsOrders = needsOrdersData || isCadastro;
   // Almoço: admin comercial/técnica acompanham o dashboard de todo mundo;
   // login individual de autoatendimento (staff_id setado) precisa dos
   // mesmos dados só pra ver/mexer no próprio status, seja qual for o
@@ -148,16 +150,19 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
       if (!cancelled) setProducts(data ?? []);
     }
 
+    async function loadOrders() {
+      const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+      if (!cancelled) setOrders(data ?? []);
+    }
+
     async function loadOrdersData() {
-      const [or, oi, op, cs, cm] = await Promise.all([
-        supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      const [oi, op, cs, cm] = await Promise.all([
         supabase.from("order_items").select("*"),
         supabase.from("order_payments").select("*"),
         supabase.from("cash_sessions").select("*").order("opened_at", { ascending: false }),
         supabase.from("cash_movements").select("*"),
       ]);
       if (cancelled) return;
-      setOrders(or.data ?? []);
       setOrderItems(oi.data ?? []);
       setOrderPayments(op.data ?? []);
       setCashSessions(cs.data ?? []);
@@ -182,6 +187,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
         needsLunch ? loadLunch() : null,
         needsProducts ? loadProducts() : null,
         needsCustomers ? loadCustomers() : null,
+        needsOrders ? loadOrders() : null,
         needsOrdersData ? loadOrdersData() : null,
       ]);
       if (!cancelled) setLoading(false);
@@ -266,11 +272,14 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
         );
       }
 
+      if (needsOrders) {
+        channel.on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () =>
+          refetch<Order>("orders", setOrders)
+        );
+      }
+
       if (needsOrdersData) {
         channel
-          .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () =>
-            refetch<Order>("orders", setOrders)
-          )
           .on("postgres_changes", { event: "*", schema: "public", table: "order_items" }, () =>
             refetch<OrderItem>("order_items", setOrderItems)
           )
@@ -294,7 +303,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
       cancelled = true;
       supabase.removeAllChannels();
     };
-  }, [hasProfile, isTecnica, needsLunch, needsProducts, needsCustomers, needsOrdersData]);
+  }, [hasProfile, isTecnica, needsLunch, needsProducts, needsCustomers, needsOrders, needsOrdersData]);
 
   // A cada 20s, expira check-ins não confirmados (no-show) — só faz
   // sentido pro lado Técnica. Roda no cliente pra não depender de um
@@ -409,7 +418,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
             })
         );
       }
-      if (needsOrdersData) {
+      if (needsOrders) {
         tasks.push(
           supabase
             .from("orders")
@@ -417,7 +426,11 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
             .order("created_at", { ascending: false })
             .then(({ data }) => {
               if (!stopped) setOrders(data ?? []);
-            }),
+            })
+        );
+      }
+      if (needsOrdersData) {
+        tasks.push(
           supabase
             .from("order_items")
             .select("*")
@@ -452,7 +465,7 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
       stopped = true;
       clearInterval(id);
     };
-  }, [hasProfile, isTecnica, needsLunch, needsProducts, needsCustomers, needsOrdersData]);
+  }, [hasProfile, isTecnica, needsLunch, needsProducts, needsCustomers, needsOrders, needsOrdersData]);
 
   function patchOrder(id: number, patch: Partial<Order>) {
     setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, ...patch } : o)));

@@ -323,6 +323,7 @@ export function VendaPage() {
 
     setSubmitting(true);
 
+    const isNovoCliente = !existingCustomerId;
     let customerId = existingCustomerId;
     if (!customerId) {
       const { data: created, error: customerError } = await supabase
@@ -366,6 +367,7 @@ export function VendaPage() {
         paid_by: isPago ? profile?.id ?? null : null,
         paid_by_name: isPago ? profile?.name ?? null : null,
         paid_at: isPago ? new Date().toISOString() : null,
+        is_novo_cliente: isNovoCliente,
       })
       .select()
       .single();

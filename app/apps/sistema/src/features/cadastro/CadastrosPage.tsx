@@ -16,8 +16,11 @@ import { supabase } from "../../lib/supabase";
 import { formatCpfCnpj } from "../../lib/docs";
 import { useAuth } from "../auth/useAuth";
 import { useLiveData } from "../live-data/useLiveData";
+import type { Customer, Order } from "@biodinamica/supabase";
 
 type StatusFilter = "all" | "pendente" | "lancado";
+
+type Row = { order: Order; customer: Customer | null };
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -52,41 +55,47 @@ function DetailField({ label, value }: { label: string; value: string }) {
 
 export function CadastrosPage() {
   const { profile } = useAuth();
-  const { customers, loading, patchCustomer } = useLiveData();
+  const { customers, orders, loading, patchOrder } = useLiveData();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [savingId, setSavingId] = useState<number | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
+  const rows: Row[] = useMemo(
+    () => orders.map((order) => ({ order, customer: customers.find((c) => c.id === order.customer_id) ?? null })),
+    [orders, customers]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return customers
-      .filter((c) => statusFilter === "all" || (statusFilter === "lancado" ? c.lancado : !c.lancado))
-      .filter((c) => {
+    return rows
+      .filter(({ order }) => statusFilter === "all" || (statusFilter === "lancado" ? order.lancado : !order.lancado))
+      .filter(({ customer }) => {
         if (!q) return true;
+        if (!customer) return false;
         return (
-          c.name.toLowerCase().includes(q) ||
-          c.doc_number.includes(q) ||
-          (c.phone ?? "").includes(q) ||
-          (c.email ?? "").toLowerCase().includes(q)
+          customer.name.toLowerCase().includes(q) ||
+          customer.doc_number.includes(q) ||
+          (customer.phone ?? "").includes(q) ||
+          (customer.email ?? "").toLowerCase().includes(q)
         );
       })
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [customers, search, statusFilter]);
+      .sort((a, b) => new Date(b.order.created_at).getTime() - new Date(a.order.created_at).getTime());
+  }, [rows, search, statusFilter]);
 
-  const pendentes = customers.filter((c) => !c.lancado).length;
-  const lancados = customers.filter((c) => c.lancado).length;
+  const pendentes = rows.filter((r) => !r.order.lancado).length;
+  const lancados = rows.filter((r) => r.order.lancado).length;
 
   async function marcarLancado(id: number) {
     setSavingId(id);
-    patchCustomer(id, {
+    patchOrder(id, {
       lancado: true,
       lancado_at: new Date().toISOString(),
       lancado_by: profile?.id ?? null,
       lancado_by_name: profile?.name ?? null,
     });
     const { error } = await supabase
-      .from("customers")
+      .from("orders")
       .update({
         lancado: true,
         lancado_at: new Date().toISOString(),
@@ -96,7 +105,7 @@ export function CadastrosPage() {
       .eq("id", id);
     setSavingId(null);
     if (error) {
-      patchCustomer(id, { lancado: false, lancado_at: null, lancado_by: null, lancado_by_name: null });
+      patchOrder(id, { lancado: false, lancado_at: null, lancado_by: null, lancado_by_name: null });
       showToast("Erro ao marcar como lançado: " + error.message);
     }
   }
@@ -107,11 +116,11 @@ export function CadastrosPage() {
         icon={ClipboardList}
         tone="clay"
         title="Cadastros"
-        subtitle="Clientes cadastrados pelo Comercial na hora da venda, em tempo real."
+        subtitle="Vendas do Comercial, em tempo real — inclusive de quem já tinha cadastro."
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatTile value={customers.length} label="Total de cadastros" icon={Users} tone="sage" live />
+        <StatTile value={rows.length} label="Total de vendas" icon={Users} tone="sage" live />
         <StatTile value={pendentes} label="Aguardando lançamento" icon={Clock} tone="clay" />
         <StatTile value={lancados} label="Já lançados" icon={CheckCircle2} tone="moss" />
       </div>
@@ -135,7 +144,7 @@ export function CadastrosPage() {
 
       <Card className="mt-4">
         <div className="mb-1 text-[0.78rem] font-semibold text-ink-soft">
-          {loading ? "Carregando..." : `${filtered.length} cliente${filtered.length === 1 ? "" : "s"}`}
+          {loading ? "Carregando..." : `${filtered.length} venda${filtered.length === 1 ? "" : "s"}`}
         </div>
         <div className="divide-y divide-line">
           {loading ? (
@@ -145,15 +154,15 @@ export function CadastrosPage() {
               <SkeletonRow />
             </>
           ) : filtered.length === 0 ? (
-            <EmptyState icon={Users} title="Nenhum cliente encontrado" subtitle="Ajuste os filtros ou a busca acima." />
+            <EmptyState icon={Users} title="Nenhuma venda encontrada" subtitle="Ajuste os filtros ou a busca acima." />
           ) : (
-            filtered.map((c) => {
-              const expanded = expandedId === c.id;
+            filtered.map(({ order, customer }) => {
+              const expanded = expandedId === order.id;
               return (
-                <div key={c.id} className="py-3">
+                <div key={order.id} className="py-3">
                   <button
                     type="button"
-                    onClick={() => setExpandedId(expanded ? null : c.id)}
+                    onClick={() => setExpandedId(expanded ? null : order.id)}
                     className="flex w-full items-start justify-between gap-2 text-left"
                   >
                     <div className="min-w-0 flex-1">
@@ -163,58 +172,77 @@ export function CadastrosPage() {
                         ) : (
                           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ink-soft" />
                         )}
-                        <span className="min-w-0 truncate text-[0.88rem] font-semibold text-ink">{c.name}</span>
-                        <span className="shrink-0 text-[0.72rem] font-semibold text-ink-soft">{formatTime(c.created_at)}</span>
+                        <span className="min-w-0 truncate text-[0.88rem] font-semibold text-ink">
+                          {customer?.name ?? "Cliente removido"}
+                        </span>
+                        <span className="shrink-0 text-[0.72rem] font-semibold text-ink-soft">
+                          {formatTime(order.created_at)}
+                        </span>
                       </div>
                       <div className="mt-0.5 break-words pl-5 text-[0.78rem] text-ink-soft">
-                        {c.doc_type.toUpperCase()} {formatDoc(c.doc_type, c.doc_number)}
-                        {c.phone && ` · ${c.phone}`}
-                        {c.email && ` · ${c.email}`}
+                        {customer && (
+                          <>
+                            {customer.doc_type.toUpperCase()} {formatDoc(customer.doc_type, customer.doc_number)}
+                            {customer.phone && ` · ${customer.phone}`}
+                            {customer.email && ` · ${customer.email}`}
+                          </>
+                        )}
                       </div>
-                      {c.lancado && c.lancado_by_name && (
+                      {order.lancado && order.lancado_by_name && (
                         <div className="mt-1 pl-5 text-[0.72rem] font-semibold text-moss-deep">
-                          Lançado por {c.lancado_by_name}
-                          {c.lancado_at && ` às ${formatTime(c.lancado_at)}`}
+                          Lançado por {order.lancado_by_name}
+                          {order.lancado_at && ` às ${formatTime(order.lancado_at)}`}
                         </div>
                       )}
                     </div>
-                    <div className="shrink-0">{c.lancado && <Badge tone="ok">lançado</Badge>}</div>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                      {!order.is_novo_cliente && <Badge tone="neutral">já cadastrado</Badge>}
+                      {order.lancado && <Badge tone="ok">lançado</Badge>}
+                    </div>
                   </button>
 
                   {expanded && (
                     <div className="ml-5 mt-3 rounded-xl border border-line bg-linen/60 p-3">
-                      <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3">
-                        <DetailField label={c.doc_type !== "cpf" ? "Razão social / Nome" : "Nome"} value={c.name} />
-                        <DetailField label={c.doc_type.toUpperCase()} value={formatDoc(c.doc_type, c.doc_number)} />
-                        {c.doc_type === "cnpj" && c.cnpj_razao_social && (
-                          <DetailField label="Razão social" value={c.cnpj_razao_social} />
-                        )}
-                        {c.doc_type === "cnpj" && c.cnpj_nome_fantasia && (
-                          <DetailField label="Nome fantasia" value={c.cnpj_nome_fantasia} />
-                        )}
-                        <DetailField label="Telefone" value={c.phone || "—"} />
-                        <DetailField label="E-mail" value={c.email || "—"} />
-                        {c.birth_date && <DetailField label="Data de nascimento" value={formatBirthDate(c.birth_date)} />}
-                        <DetailField label="Endereço" value={c.address || "—"} />
-                        <DetailField label="CEP" value={c.zip_code || "—"} />
-                        <DetailField label="Cidade" value={c.city || "—"} />
-                        <DetailField label="Estado" value={c.state || "—"} />
-                        <DetailField label="Cadastrado em" value={formatFull(c.created_at)} />
-                        {c.lancado && (
+                      {customer ? (
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-3">
+                          <DetailField label={customer.doc_type !== "cpf" ? "Razão social / Nome" : "Nome"} value={customer.name} />
+                          <DetailField label={customer.doc_type.toUpperCase()} value={formatDoc(customer.doc_type, customer.doc_number)} />
+                          {customer.doc_type === "cnpj" && customer.cnpj_razao_social && (
+                            <DetailField label="Razão social" value={customer.cnpj_razao_social} />
+                          )}
+                          {customer.doc_type === "cnpj" && customer.cnpj_nome_fantasia && (
+                            <DetailField label="Nome fantasia" value={customer.cnpj_nome_fantasia} />
+                          )}
+                          <DetailField label="Telefone" value={customer.phone || "—"} />
+                          <DetailField label="E-mail" value={customer.email || "—"} />
+                          {customer.birth_date && <DetailField label="Data de nascimento" value={formatBirthDate(customer.birth_date)} />}
+                          <DetailField label="Endereço" value={customer.address || "—"} />
+                          <DetailField label="CEP" value={customer.zip_code || "—"} />
+                          <DetailField label="Cidade" value={customer.city || "—"} />
+                          <DetailField label="Estado" value={customer.state || "—"} />
                           <DetailField
-                            label="Lançado"
-                            value={`${c.lancado_by_name ?? "—"}${c.lancado_at ? ` · ${formatFull(c.lancado_at)}` : ""}`}
+                            label="Cadastro do cliente"
+                            value={order.is_novo_cliente ? "Novo, feito nesta venda" : "Já existia antes desta venda"}
                           />
-                        )}
-                      </div>
+                          <DetailField label="Venda em" value={formatFull(order.created_at)} />
+                          {order.lancado && (
+                            <DetailField
+                              label="Lançado"
+                              value={`${order.lancado_by_name ?? "—"}${order.lancado_at ? ` · ${formatFull(order.lancado_at)}` : ""}`}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-[0.82rem] text-ink-soft">Cliente não encontrado.</div>
+                      )}
 
-                      {!c.lancado && (
+                      {!order.lancado && (
                         <Button
                           variant="outline"
                           size="sm"
                           className="mt-3 w-auto"
-                          loading={savingId === c.id}
-                          onClick={() => marcarLancado(c.id)}
+                          loading={savingId === order.id}
+                          onClick={() => marcarLancado(order.id)}
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Marcar lançado

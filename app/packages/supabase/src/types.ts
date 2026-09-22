@@ -149,10 +149,6 @@ export interface Customer {
   city: string | null;
   state: string | null;
   created_at: string;
-  lancado: boolean;
-  lancado_at: string | null;
-  lancado_by: string | null;
-  lancado_by_name: string | null;
 }
 
 export interface Order {
@@ -173,6 +169,11 @@ export interface Order {
   cash_received: number | null;
   cash_change: number | null;
   created_at: string;
+  is_novo_cliente: boolean;
+  lancado: boolean;
+  lancado_at: string | null;
+  lancado_by: string | null;
+  lancado_by_name: string | null;
 }
 
 export interface OrderItem {
